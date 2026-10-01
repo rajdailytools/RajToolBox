@@ -1,0 +1,6 @@
+{
+  "name": "RajToolBox",
+  "description": "Powerful Online Tools. Simple to Use. Fast, free, browser-based tools for PDF, images, text, developers, converters, QR codes, and SEO.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
