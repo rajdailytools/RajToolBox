@@ -40,16 +40,16 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
   'qr-barcode-tools': {
     id: 'qr-barcode-tools',
     slug: 'qr-barcode-tools',
-    name: 'QR & Barcode Tools',
+    name: 'QR & Barcode',
     shortName: 'QR & Barcode',
     description: 'Generate customizable high-resolution QR codes for URLs, WiFi, contact cards, text, and render industrial barcodes ready to download.',
     iconName: 'QrCode',
-    featuredTools: ['qr-code-generator', 'wifi-qr-generator', 'vcard-qr-generator', 'barcode-generator', 'barcode-guide']
+    featuredTools: ['qr-code-generator', 'barcode-generator', 'wifi-qr-generator']
   },
   'converters': {
     id: 'converters',
     slug: 'converters',
-    name: 'Converter Tools',
+    name: 'Converters',
     shortName: 'Converters',
     description: 'Accurately convert length, weight, temperature, data storage, speed, pressure, energy, angles, number systems, and Roman numerals.',
     iconName: 'ArrowRightLeft',
@@ -59,19 +59,19 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
     id: 'seo-tools',
     slug: 'seo-tools',
     name: 'SEO & Web Tools',
-    shortName: 'SEO',
+    shortName: 'SEO & Web',
     description: 'Generate complete Meta tags, OpenGraph previews, Twitter cards, Robots.txt, XML Sitemaps, UTM campaign URLs, and check keyword density.',
     iconName: 'Globe',
-    featuredTools: ['meta-tag-generator', 'robots-txt-generator', 'sitemap-generator', 'utm-builder', 'keyword-density-checker', 'http-status-codes']
+    featuredTools: ['meta-tag-generator', 'robots-txt-generator', 'sitemap-generator', 'utm-builder', 'keyword-density-checker']
   },
   'social-media-tools': {
     id: 'social-media-tools',
     slug: 'social-media-tools',
     name: 'Social Media Tools',
-    shortName: 'Social',
+    shortName: 'Social Media',
     description: 'Format captivating Instagram captions, craft YouTube titles and descriptions, organize hashtags, and check platform character limits.',
     iconName: 'Share2',
-    featuredTools: ['social-post-formatter', 'youtube-helper', 'hashtag-formatter', 'social-image-dimensions']
+    featuredTools: ['social-post-formatter', 'hashtag-formatter']
   },
   'file-data-tools': {
     id: 'file-data-tools',
@@ -80,34 +80,70 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
     shortName: 'File & Data',
     description: 'Convert CSV to JSON and JSON to CSV, clean tabulated data, calculate cryptographic file hashes, and convert binary file storage units.',
     iconName: 'FileSpreadsheet',
-    featuredTools: ['csv-to-json', 'json-to-csv', 'file-hash-generator', 'file-size-converter', 'duplicate-data-checker']
+    featuredTools: ['csv-to-json', 'json-to-csv']
   },
   'productivity-tools': {
     id: 'productivity-tools',
     slug: 'productivity-tools',
     name: 'Productivity Tools',
     shortName: 'Productivity',
-    description: 'Stay on track with a customizable Pomodoro timer, precision stopwatch, secure password generator, random choice picker, and palette maker.',
+    description: 'Stay focused and on track with a customizable Pomodoro timer, precision stopwatch, and daily timebox tools.',
     iconName: 'CheckSquare',
-    featuredTools: ['pomodoro-timer', 'password-generator', 'stopwatch-timer', 'random-decision-picker', 'color-palette-generator']
+    featuredTools: ['pomodoro-timer', 'stopwatch-timer']
   },
   'date-time-tools': {
     id: 'date-time-tools',
     slug: 'date-time-tools',
-    name: 'Date & Time Utilities',
+    name: 'Date & Time',
     shortName: 'Date & Time',
     description: 'Calculate days between dates, working days, add or subtract time intervals, compute exact age in years/months/days, and check leap years.',
     iconName: 'Clock',
-    featuredTools: ['days-between-dates', 'age-calculator', 'working-days-calculator', 'add-subtract-days', 'leap-year-checker']
+    featuredTools: ['days-between-dates', 'age-calculator']
   },
   'educational-tools': {
     id: 'educational-tools',
     slug: 'educational-tools',
-    name: 'Educational Utilities',
-    shortName: 'Educational',
+    name: 'Education & Math',
+    shortName: 'Education & Math',
     description: 'Calculate percentages, solve ratios & proportions, compute arithmetic averages, simplify fractions, find prime factors, and GCD/LCM.',
     iconName: 'GraduationCap',
-    featuredTools: ['percentage-calculator', 'ratio-proportion-calculator', 'average-calculator', 'fraction-calculator', 'prime-number-checker', 'gcd-lcm-calculator']
+    featuredTools: ['percentage-calculator', 'ratio-proportion-calculator', 'average-calculator']
+  },
+  'color-design': {
+    id: 'color-design',
+    slug: 'color-design',
+    name: 'Color & Design',
+    shortName: 'Color & Design',
+    description: 'Generate harmonious color palettes, convert between HEX, RGB, HSL, and CMYK formats, check WCAG contrast, and sample colors.',
+    iconName: 'Palette',
+    featuredTools: ['color-palette-generator', 'color-converter', 'image-color-picker']
+  },
+  'security-privacy': {
+    id: 'security-privacy',
+    slug: 'security-privacy',
+    name: 'Security & Privacy Utilities',
+    shortName: 'Security & Privacy',
+    description: 'Generate strong cryptographically secure passwords with entropy calculation and compute cryptographic SHA-256 and MD5 hashes.',
+    iconName: 'ShieldCheck',
+    featuredTools: ['password-generator', 'hash-generator']
+  },
+  'everyday-utilities': {
+    id: 'everyday-utilities',
+    slug: 'everyday-utilities',
+    name: 'Everyday Utilities',
+    shortName: 'Everyday Utilities',
+    description: 'Everyday tools including interactive multi-step digital tally counter and random choice picker for quick, unbiased decisions.',
+    iconName: 'Wrench',
+    featuredTools: ['random-decision-picker', 'tally-counter']
+  },
+  'finance-calculators': {
+    id: 'finance-calculators',
+    slug: 'finance-calculators',
+    name: 'Finance & Calculators',
+    shortName: 'Finance',
+    description: 'Calculate monthly loan EMI repayments with amortization breakdown, and compute bill tips, bill splitting, and sales discounts.',
+    iconName: 'Calculator',
+    featuredTools: ['loan-emi-calculator', 'tip-discount-calculator']
   }
 };
 

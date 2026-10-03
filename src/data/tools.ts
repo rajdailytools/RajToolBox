@@ -714,7 +714,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'hash-generator',
     slug: 'hash-generator',
     name: 'Hash Generator (SHA-256, SHA-1, SHA-512)',
-    category: 'developer-tools',
+    category: 'security-privacy',
     shortDescription: 'Generate cryptographic SHA-256, SHA-512, and SHA-1 hashes from any input string.',
     fullDescription: 'Calculate standard cryptographic message digests using the browser Web Crypto API (SubtleCrypto). Computes SHA-256, SHA-512, and SHA-1 hashes instantaneously as you type.',
     iconName: 'Hash',
@@ -774,7 +774,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'color-converter',
     slug: 'color-converter',
     name: 'Color Converter (HEX / RGB / HSL)',
-    category: 'developer-tools',
+    category: 'color-design',
     shortDescription: 'Convert color codes between HEX, RGB, HSL, and CSS rgba with live color swatch preview.',
     fullDescription: 'Convert colors across HEX, RGB, and HSL color models. Features a live visual color picker, instant mathematical conversion, CSS snippet generator, and light/dark contrast indicator.',
     iconName: 'Palette',
@@ -1296,10 +1296,43 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     relatedToolSlugs: ['stopwatch-timer', 'password-generator']
   },
   {
+    id: 'stopwatch-timer',
+    slug: 'stopwatch-timer',
+    name: 'Online Stopwatch & Lap Timer',
+    category: 'productivity-tools',
+    shortDescription: 'Millisecond-precision online stopwatch with split-lap time recording, pause, and reset features.',
+    fullDescription: 'Accurately measure elapsed time down to the hundredth of a second. Features instant start, pause, resume, and split-lap recording to log multiple split times for workouts, cooking, productivity sprints, and study intervals.',
+    iconName: 'Clock',
+    keywords: ['stopwatch', 'online stopwatch', 'lap timer', 'precision timer', 'split timer'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Start Timer', instruction: 'Click "Start" to begin counting milliseconds immediately.' },
+      { step: 2, title: 'Record Laps', instruction: 'Click "Lap" while running to log interim split intervals.' },
+      { step: 3, title: 'Pause or Reset', instruction: 'Click "Pause" to stop or "Reset" to return the stopwatch to 00:00.00.' }
+    ],
+    realLifeExample: {
+      title: 'Timing Sprint Intervals or Speed Drills',
+      inputDescription: 'Track 3 consecutive laps around a 400m track.',
+      outputDescription: 'Logs: Lap 1: 01:14.20, Lap 2: 01:12.85, Lap 3: 01:15.10. Total: 03:42.15.',
+      details: [
+        { label: 'Lap 1 Split', value: '01:14.20' },
+        { label: 'Lap 2 Split', value: '01:12.85' },
+        { label: 'Lap 3 Split', value: '01:15.10' }
+      ]
+    },
+    howItWorks: 'Uses Date.now() timestamp differential tracking to prevent JavaScript thread throttling or drift.',
+    faqs: [
+      { question: 'Does the timer lose accuracy if I switch browser tabs?', answer: 'No, the stopwatch relies on absolute timestamp delta comparison (Date.now()), guaranteeing zero drift across tab switches.' },
+      { question: 'How many laps can I record?', answer: 'You can record an unlimited number of laps with scrollable lap history.' }
+    ],
+    relatedToolSlugs: ['pomodoro-timer', 'days-between-dates', 'tally-counter']
+  },
+  {
     id: 'password-generator',
     slug: 'password-generator',
     name: 'Strong Password Generator',
-    category: 'productivity-tools',
+    category: 'security-privacy',
     shortDescription: 'Generate secure, uncrackable random passwords with custom length, symbols, and entropy score.',
     fullDescription: 'Create cryptographically secure passwords using the Web Crypto API. Customize length (8 to 64 chars), uppercase, lowercase, numbers, and special symbols with instant password strength & entropy scoring.',
     iconName: 'Lock',
@@ -1340,7 +1373,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'random-decision-picker',
     slug: 'random-decision-picker',
     name: 'Random Choice Picker & Decision Maker',
-    category: 'productivity-tools',
+    category: 'everyday-utilities',
     shortDescription: 'Can\'t make up your mind? Enter your options and let the random selector pick fairly for you.',
     fullDescription: 'Enter any list of choices, lunch options, contest entries, or alternatives, and let the fair random picker select a winner with fun animated celebration.',
     iconName: 'HelpCircle',
@@ -1369,7 +1402,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'color-palette-generator',
     slug: 'color-palette-generator',
     name: 'Color Palette Generator',
-    category: 'productivity-tools',
+    category: 'color-design',
     shortDescription: 'Generate aesthetic, harmonic 5-color palettes with HEX codes for designers and developers.',
     fullDescription: 'Generate harmonious color palettes based on color theory (monochromatic, analogous, complementary, triad, or random). Lock colors you love and re-roll the rest, then copy HEX or CSS arrays.',
     iconName: 'Palette',
@@ -1600,6 +1633,118 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       { question: 'What is the difference between Mean and Median?', answer: 'Mean is the mathematical average (sum divided by count). Median is the middle number when values are sorted from lowest to highest, which is resilient against extreme outliers.' }
     ],
     relatedToolSlugs: ['percentage-calculator', 'ratio-proportion-calculator']
+  },
+  // EVERYDAY UTILITIES
+  {
+    id: 'tally-counter',
+    slug: 'tally-counter',
+    name: 'Digital Tally Counter & Goal Tracker',
+    category: 'everyday-utilities',
+    shortDescription: 'Free online digital clicker tally counter with custom step increments, goal progress, and instant reset.',
+    fullDescription: 'Keep accurate count of event attendees, prayer mantras, inventory, habits, fitness reps, or lab experiments. Features a huge tap area, customizable step intervals (+1, +5, +10), goal progress bar, and instant subtraction.',
+    iconName: 'Wrench',
+    keywords: ['tally counter', 'clicker counter', 'digital clicker', 'count tracker', 'inventory counter'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Set Goal & Step', instruction: 'Optionally set your target goal count and step increment.' },
+      { step: 2, title: 'Tap to Count', instruction: 'Click or tap anywhere on the large counter card to increment.' },
+      { step: 3, title: 'Adjust or Reset', instruction: 'Use the minus button to decrement or the reset button to start fresh.' }
+    ],
+    realLifeExample: {
+      title: 'Counting Attendees at Community Conference Door',
+      inputDescription: 'Door volunteer clicks the counter card for every attendee entering.',
+      outputDescription: 'Counter displays: 247 attendees (82% of 300 maximum room capacity).',
+      details: [
+        { label: 'Current Count', value: '247 attendees' },
+        { label: 'Room Capacity Goal', value: '300 max' },
+        { label: 'Remaining Seats', value: '53 seats' }
+      ]
+    },
+    howItWorks: 'Maintains state in fast local browser memory with reactive re-rendering and high contrast numbers.',
+    faqs: [
+      { question: 'Can I decrease the count if I click by mistake?', answer: 'Yes, click the minus button to decrement by your selected step size.' },
+      { question: 'Is there a limit on how high I can count?', answer: 'No, the counter comfortably supports numbers up to millions without lag.' }
+    ],
+    relatedToolSlugs: ['random-decision-picker', 'stopwatch-timer']
+  },
+  // FINANCE & CALCULATORS
+  {
+    id: 'loan-emi-calculator',
+    slug: 'loan-emi-calculator',
+    name: 'Loan EMI & Repayment Calculator',
+    category: 'finance-calculators',
+    shortDescription: 'Calculate monthly loan EMI, total interest payable, and overall loan repayment with visual breakdown.',
+    fullDescription: 'Calculate exact Equated Monthly Installments (EMI) for home loans, auto loans, personal loans, or student loans. Features live interest-to-principal ratio calculation and clear repayment projections.',
+    iconName: 'Calculator',
+    keywords: ['loan emi calculator', 'emi calculator', 'mortgage payment calculator', 'loan repayment', 'interest calculator'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Enter Loan Amount', instruction: 'Type your total principal borrowing amount (e.g. $25,000).' },
+      { step: 2, title: 'Set Annual Rate', instruction: 'Enter the annual percentage interest rate (e.g. 8.5%).' },
+      { step: 3, title: 'Choose Tenure', instruction: 'Select loan duration in years (e.g. 5 years).' },
+      { step: 4, title: 'Review Results', instruction: 'Examine monthly installment, total interest, and total payable amount.' }
+    ],
+    realLifeExample: {
+      title: 'Financing an Auto Loan of $25,000 over 5 Years',
+      inputDescription: 'Principal: $25,000, Interest: 8.5% annual, Tenure: 5 years (60 months).',
+      outputDescription: 'Monthly EMI: $512.91, Total Interest: $5,774.87, Total Repayment: $30,774.87.',
+      details: [
+        { label: 'Principal Borrowed', value: '$25,000.00' },
+        { label: 'Monthly Payment', value: '$512.91 / month' },
+        { label: 'Total Interest', value: '$5,774.87' }
+      ]
+    },
+    howItWorks: 'Applies standard banking amortization annuity formula EMI = [P × R × (1+R)^N] / [(1+R)^N - 1], where R is monthly rate and N is total months.',
+    formula: {
+      title: 'Standard Annuity EMI Formula',
+      formula: 'EMI = \\frac{P \\times R \\times (1 + R)^N}{(1 + R)^N - 1}',
+      variables: [
+        { symbol: 'P', meaning: 'Principal loan amount' },
+        { symbol: 'R', meaning: 'Monthly interest rate (Annual rate / 12 / 100)' },
+        { symbol: 'N', meaning: 'Total number of monthly installments (Years × 12)' }
+      ],
+      explanation: 'Determines the fixed monthly sum required to fully amortize both principal and compound interest over the tenure.',
+      workedExample: 'P=$10,000, R=0.00833 (10%/yr), N=12 -> EMI = $879.16/mo.'
+    },
+    faqs: [
+      { question: 'What does EMI stand for?', answer: 'EMI stands for Equated Monthly Installment—a fixed payment amount made by a borrower to a lender at a specified date each calendar month.' },
+      { question: 'Does paying off the loan earlier reduce total interest?', answer: 'Yes, prepayment directly reduces the outstanding principal balance upon which future interest is compounded.' }
+    ],
+    relatedToolSlugs: ['tip-discount-calculator', 'percentage-calculator']
+  },
+  {
+    id: 'tip-discount-calculator',
+    slug: 'tip-discount-calculator',
+    name: 'Tip & Shopping Discount Calculator',
+    category: 'finance-calculators',
+    shortDescription: 'Split restaurant bills with custom tip percentages, and calculate retail sale discounts and sales taxes.',
+    fullDescription: 'Two essential finance tools in one: effortlessly split restaurant bills with custom gratuity percentages among any number of diners, or compute retail markdowns, clearance sale discounts, and sales tax.',
+    iconName: 'Calculator',
+    keywords: ['tip calculator', 'bill splitter', 'discount calculator', 'sales tax calculator', 'clearance price'],
+    popular: true,
+    howToSteps: [
+      { step: 1, title: 'Select Tool Mode', instruction: 'Choose between "Tip & Bill Splitter" or "Shopping Discount & Tax".' },
+      { step: 2, title: 'Enter Numbers', instruction: 'Input bill or original price, percentage rate, and number of people.' },
+      { step: 3, title: 'View Summary', instruction: 'Check total per person, tip amount, discount savings, or final checkout price.' }
+    ],
+    realLifeExample: {
+      title: 'Splitting Dinner for 4 with 18% Tip',
+      inputDescription: 'Bill: $120.00, Tip: 18%, Split between 4 diners.',
+      outputDescription: 'Tip: $21.60, Total: $141.60. Each person pays exactly $35.40.',
+      details: [
+        { label: 'Food Subtotal', value: '$120.00' },
+        { label: '18% Gratuity', value: '$21.60' },
+        { label: 'Per Diner Share', value: '$35.40' }
+      ]
+    },
+    howItWorks: 'Multiplies input price by percentage basis points to calculate deductions or gratuities with 2-decimal currency precision.',
+    faqs: [
+      { question: 'What is a standard restaurant tip percentage?', answer: 'In the US and Canada, standard restaurant tipping is typically 15% to 20% for good table service.' },
+      { question: 'Does this calculate tax on discounted price?', answer: 'Yes! In discount mode, sales tax is calculated on the discounted price rather than the original MSRP.' }
+    ],
+    relatedToolSlugs: ['loan-emi-calculator', 'percentage-calculator']
   }
 ];
 

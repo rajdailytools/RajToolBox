@@ -35,7 +35,7 @@ export const AllToolsPage: React.FC = () => {
           Explore All Online Tools
         </h1>
         <p className="text-sm text-[#71717A] dark:text-[#A1A1AA] mt-2">
-          Discover {TOOLS_REGISTRY.length} free, high-speed tools across 12 categories.
+          Discover {TOOLS_REGISTRY.length} free, high-speed tools across {CATEGORIES_LIST.length} categories.
           All running directly in your browser.
         </p>
       </div>

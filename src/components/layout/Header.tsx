@@ -195,13 +195,13 @@ export const Header: React.FC = () => {
 
               {desktopCategoriesOpen && (
                 <div
-                  className="absolute left-0 mt-2 w-64 rounded-xl bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100"
+                  className="absolute left-0 mt-2 w-72 max-h-[75vh] overflow-y-auto rounded-xl bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100"
                   onMouseLeave={() => setDesktopCategoriesOpen(false)}
                 >
                   <div className="text-xs font-bold text-[#71717A] px-2 py-1 uppercase tracking-wider">
-                    All Tool Categories
+                    More Categories
                   </div>
-                  {CATEGORIES_LIST.slice(6).map((cat) => (
+                  {CATEGORIES_LIST.slice(3).map((cat) => (
                     <button
                       key={cat.id}
                       type="button"

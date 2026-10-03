@@ -171,6 +171,110 @@ export const PomodoroComponent: React.FC = () => {
   );
 };
 
+// STOPWATCH & LAP TIMER
+export const StopwatchComponent: React.FC = () => {
+  const [time, setTime] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [laps, setLaps] = useState<number[]>([]);
+  const timerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      const startTime = Date.now() - time;
+      timerRef.current = setInterval(() => {
+        setTime(Date.now() - startTime);
+      }, 10);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRunning]);
+
+  const handleStartStop = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    setTime(0);
+    setLaps([]);
+  };
+
+  const handleLap = () => {
+    if (isRunning) {
+      setLaps([time, ...laps]);
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-center max-w-md mx-auto">
+      <div className="text-xs uppercase font-extrabold tracking-widest text-[#71717A] dark:text-[#A1A1AA] mb-2">
+        Precision Stopwatch
+      </div>
+
+      <div className="text-6xl font-black font-mono tracking-tight text-[#18181B] dark:text-[#F4F4F5] my-6">
+        {formatTime(time)}
+      </div>
+
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          onClick={handleStartStop}
+          className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-bold text-xs text-white shadow-xs transition-colors ${
+            isRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#EC4899] hover:bg-[#DB2777]'
+          }`}
+        >
+          {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          <span>{isRunning ? 'Pause' : 'Start'}</span>
+        </button>
+
+        <button
+          onClick={handleLap}
+          disabled={!isRunning}
+          className="px-5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899] text-xs font-bold disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          Lap
+        </button>
+
+        <button
+          onClick={handleReset}
+          className="p-2.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899] text-xs transition-colors"
+          aria-label="Reset stopwatch"
+        >
+          <RotateCcw className="w-4 h-4 text-[#71717A]" />
+        </button>
+      </div>
+
+      {laps.length > 0 && (
+        <div className="border-t border-[#E4E4E7] dark:border-[#27272A] pt-4 text-left">
+          <div className="text-xs font-bold text-[#71717A] mb-2 uppercase tracking-wider">
+            Recorded Laps ({laps.length})
+          </div>
+          <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+            {laps.map((lapTime, idx) => (
+              <div
+                key={idx}
+                className="flex justify-between items-center px-3 py-1.5 rounded-lg bg-[#F4F4F5] dark:bg-[#202026] text-xs font-mono"
+              >
+                <span className="font-semibold text-[#71717A]">Lap {laps.length - idx}</span>
+                <span className="font-bold text-[#EC4899]">{formatTime(lapTime)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // PASSWORD GENERATOR
 export const PasswordGeneratorComponent: React.FC = () => {
   const { showToast } = useApp();
@@ -624,7 +728,7 @@ export const RatioCalculatorComponent: React.FC = () => {
   );
 };
 
-// AVERAGE CALCULATOR
+// AVERAGE (MEAN, MEDIAN, MODE, RANGE) CALCULATOR
 export const AverageCalculatorComponent: React.FC = () => {
   const [dataStr, setDataStr] = useState('85, 92, 78, 92, 88, 95');
 
@@ -684,3 +788,353 @@ export const AverageCalculatorComponent: React.FC = () => {
     </div>
   );
 };
+
+// TALLY COUNTER
+export const TallyCounterComponent: React.FC = () => {
+  const [count, setCount] = useState<number>(0);
+  const [step, setStep] = useState<number>(1);
+  const [target, setTarget] = useState<number>(100);
+
+  const increment = () => setCount((c) => c + step);
+  const decrement = () => setCount((c) => Math.max(0, c - step));
+  const reset = () => setCount(0);
+
+  const progress = target > 0 ? Math.min(100, Math.round((count / target) * 100)) : 0;
+
+  return (
+    <div className="space-y-6 max-w-md mx-auto text-center">
+      {/* Target Progress */}
+      <div className="bg-[#FFFDF7] dark:bg-[#121215] p-3 rounded-2xl border border-[#FACC15]/40 text-xs text-[#71717A] dark:text-[#A1A1AA]">
+        <div className="flex justify-between font-bold mb-1">
+          <span>Goal Progress</span>
+          <span className="text-[#EC4899] font-mono">{progress}% of {target}</span>
+        </div>
+        <div className="w-full h-2 rounded-full bg-[#E4E4E7] dark:bg-[#27272A] overflow-hidden">
+          <div
+            className="h-full bg-[#EC4899] transition-all duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Big Interactive Counter Card */}
+      <button
+        onClick={increment}
+        type="button"
+        className="w-full py-12 px-6 rounded-3xl bg-white dark:bg-[#18181B] border-2 border-[#EC4899] shadow-md hover:shadow-lg active:scale-98 transition-all cursor-pointer select-none group"
+      >
+        <div className="text-xs uppercase font-extrabold tracking-widest text-[#71717A] dark:text-[#A1A1AA] mb-2 group-hover:text-[#EC4899] transition-colors">
+          Tap anywhere to count (+{step})
+        </div>
+        <div className="text-7xl font-black font-mono tracking-tight text-[#18181B] dark:text-[#F4F4F5] group-hover:scale-105 transition-transform">
+          {count.toLocaleString()}
+        </div>
+      </button>
+
+      {/* Controls */}
+      <div className="grid grid-cols-3 gap-3">
+        <button
+          onClick={decrement}
+          type="button"
+          className="py-3 px-4 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899] text-sm font-bold bg-white dark:bg-[#18181B] text-[#18181B] dark:text-[#F4F4F5] transition-colors"
+        >
+          -{step}
+        </button>
+        <button
+          onClick={reset}
+          type="button"
+          className="py-3 px-4 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-red-500 hover:text-red-500 text-sm font-bold bg-white dark:bg-[#18181B] text-[#71717A] transition-colors"
+        >
+          Reset
+        </button>
+        <button
+          onClick={() => setCount((c) => c + step * 5)}
+          type="button"
+          className="py-3 px-4 rounded-xl border border-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899] text-sm font-bold hover:bg-[#EC4899] hover:text-white transition-colors"
+        >
+          +{step * 5}
+        </button>
+      </div>
+
+      {/* Settings */}
+      <div className="grid grid-cols-2 gap-3 text-left">
+        <div>
+          <label className="block text-[11px] font-bold text-[#71717A] mb-1">Step Size</label>
+          <select
+            value={step}
+            onChange={(e) => setStep(parseInt(e.target.value, 10))}
+            className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+          >
+            <option value={1}>1 at a time</option>
+            <option value={2}>2 at a time</option>
+            <option value={5}>5 at a time</option>
+            <option value={10}>10 at a time</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-[#71717A] mb-1">Target Goal</label>
+          <input
+            type="number"
+            value={target}
+            onChange={(e) => setTarget(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// LOAN EMI CALCULATOR
+export const LoanEmiCalculatorComponent: React.FC = () => {
+  const [loanAmount, setLoanAmount] = useState<number>(25000);
+  const [annualRate, setAnnualRate] = useState<number>(8.5);
+  const [tenureYears, setTenureYears] = useState<number>(5);
+
+  // EMI = [P x R x (1+R)^N]/[(1+R)^N-1]
+  const monthlyRate = annualRate / 12 / 100;
+  const totalMonths = tenureYears * 12;
+
+  const emi =
+    monthlyRate > 0 && totalMonths > 0
+      ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) /
+        (Math.pow(1 + monthlyRate, totalMonths) - 1)
+      : loanAmount / (totalMonths || 1);
+
+  const totalPayment = emi * totalMonths;
+  const totalInterest = totalPayment - loanAmount;
+  const interestPercentage = Math.round((totalInterest / (totalPayment || 1)) * 100);
+
+  return (
+    <div className="space-y-6 max-w-xl mx-auto">
+      {/* Inputs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-[#71717A] mb-1">Loan Amount ($)</label>
+          <input
+            type="number"
+            value={loanAmount}
+            onChange={(e) => setLoanAmount(Math.max(0, parseFloat(e.target.value) || 0))}
+            className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#71717A] mb-1">Interest Rate (%/yr)</label>
+          <input
+            type="number"
+            step="0.1"
+            value={annualRate}
+            onChange={(e) => setAnnualRate(Math.max(0, parseFloat(e.target.value) || 0))}
+            className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#71717A] mb-1">Tenure (Years)</label>
+          <input
+            type="number"
+            value={tenureYears}
+            onChange={(e) => setTenureYears(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+          />
+        </div>
+      </div>
+
+      {/* Main Result Card */}
+      <div className="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#121215] border border-[#FACC15]/40 text-center">
+        <span className="text-[11px] uppercase font-bold text-[#71717A] tracking-wider block">
+          Monthly EMI
+        </span>
+        <div className="text-4xl font-black text-[#EC4899] my-2 font-mono">
+          ${Math.round(emi).toLocaleString()}{' '}
+          <span className="text-xs font-normal text-[#71717A]">
+            ({emi.toFixed(2)}/mo)
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] text-left">
+          <div>
+            <span className="text-[11px] font-bold text-[#71717A] block">Total Interest</span>
+            <span className="text-base font-bold text-[#18181B] dark:text-[#F4F4F5]">
+              ${Math.round(totalInterest).toLocaleString()}
+            </span>
+          </div>
+          <div>
+            <span className="text-[11px] font-bold text-[#71717A] block">Total Payable</span>
+            <span className="text-base font-bold text-[#18181B] dark:text-[#F4F4F5]">
+              ${Math.round(totalPayment).toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Visual Proportion Bar */}
+      <div>
+        <div className="flex justify-between text-xs font-bold text-[#71717A] mb-1.5">
+          <span>Principal: {100 - interestPercentage}%</span>
+          <span>Interest: {interestPercentage}%</span>
+        </div>
+        <div className="w-full h-3 rounded-full bg-[#3B82F6] overflow-hidden flex">
+          <div
+            className="h-full bg-[#EC4899]"
+            style={{ width: `${interestPercentage}%` }}
+          />
+        </div>
+        <div className="flex items-center gap-4 text-[11px] text-[#71717A] mt-2 justify-center">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> Principal Amount
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#EC4899]" /> Total Interest
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// TIP & DISCOUNT CALCULATOR
+export const TipDiscountCalculatorComponent: React.FC = () => {
+  const [tab, setTab] = useState<'tip' | 'discount'>('tip');
+
+  // Tip State
+  const [bill, setBill] = useState<number>(75);
+  const [tipPercent, setTipPercent] = useState<number>(18);
+  const [people, setPeople] = useState<number>(2);
+
+  // Discount State
+  const [originalPrice, setOriginalPrice] = useState<number>(120);
+  const [discountPercent, setDiscountPercent] = useState<number>(25);
+  const [salesTaxPercent, setSalesTaxPercent] = useState<number>(8.5);
+
+  // Tip Calculations
+  const tipAmount = (bill * tipPercent) / 100;
+  const billTotal = bill + tipAmount;
+  const perPersonTotal = billTotal / (people || 1);
+  const perPersonTip = tipAmount / (people || 1);
+
+  // Discount Calculations
+  const discountAmount = (originalPrice * discountPercent) / 100;
+  const discountedPrice = originalPrice - discountAmount;
+  const taxAmount = (discountedPrice * salesTaxPercent) / 100;
+  const finalPrice = discountedPrice + taxAmount;
+
+  return (
+    <div className="space-y-6 max-w-lg mx-auto">
+      {/* Tabs */}
+      <div className="flex rounded-xl bg-[#F4F4F5] dark:bg-[#202026] p-1">
+        <button
+          onClick={() => setTab('tip')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+            tab === 'tip'
+              ? 'bg-white dark:bg-[#18181B] text-[#EC4899] shadow-xs'
+              : 'text-[#71717A]'
+          }`}
+        >
+          Tip & Bill Splitter
+        </button>
+        <button
+          onClick={() => setTab('discount')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+            tab === 'discount'
+              ? 'bg-white dark:bg-[#18181B] text-[#EC4899] shadow-xs'
+              : 'text-[#71717A]'
+          }`}
+        >
+          Shopping Discount & Tax
+        </button>
+      </div>
+
+      {tab === 'tip' ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Bill Total ($)</label>
+              <input
+                type="number"
+                value={bill}
+                onChange={(e) => setBill(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Tip (%)</label>
+              <input
+                type="number"
+                value={tipPercent}
+                onChange={(e) => setTipPercent(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Split (# People)</label>
+              <input
+                type="number"
+                value={people}
+                onChange={(e) => setPeople(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#121215] border border-[#FACC15]/40 text-center">
+            <span className="text-[11px] uppercase font-bold text-[#71717A] tracking-wider block">
+              Total Per Person
+            </span>
+            <div className="text-4xl font-black text-[#EC4899] my-2 font-mono">
+              ${perPersonTotal.toFixed(2)}
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] text-xs text-[#71717A]">
+              <div>Tip per Person: <strong className="text-[#18181B] dark:text-[#F4F4F5]">${perPersonTip.toFixed(2)}</strong></div>
+              <div>Overall Total: <strong className="text-[#18181B] dark:text-[#F4F4F5]">${billTotal.toFixed(2)}</strong></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Price ($)</label>
+              <input
+                type="number"
+                value={originalPrice}
+                onChange={(e) => setOriginalPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Discount (%)</label>
+              <input
+                type="number"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#71717A] mb-1">Tax (%)</label>
+              <input
+                type="number"
+                value={salesTaxPercent}
+                onChange={(e) => setSalesTaxPercent(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B]"
+              />
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#121215] border border-[#FACC15]/40 text-center">
+            <span className="text-[11px] uppercase font-bold text-[#71717A] tracking-wider block">
+              Final Checkout Price
+            </span>
+            <div className="text-4xl font-black text-[#EC4899] my-2 font-mono">
+              ${finalPrice.toFixed(2)}
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] text-xs text-[#71717A]">
+              <div>You Save: <strong className="text-[#16A34A] dark:text-[#4ADE80]">${discountAmount.toFixed(2)}</strong></div>
+              <div>Sales Tax: <strong className="text-[#18181B] dark:text-[#F4F4F5]">${taxAmount.toFixed(2)}</strong></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+

@@ -50,6 +50,7 @@ import {
 import {
   CsvJsonComponent,
   PomodoroComponent,
+  StopwatchComponent,
   PasswordGeneratorComponent,
   RandomPickerComponent,
   ColorPaletteComponent,
@@ -57,7 +58,10 @@ import {
   AgeCalculatorComponent,
   PercentageCalculatorComponent,
   RatioCalculatorComponent,
-  AverageCalculatorComponent
+  AverageCalculatorComponent,
+  TallyCounterComponent,
+  LoanEmiCalculatorComponent,
+  TipDiscountCalculatorComponent
 } from './components/ProductivityMathTools';
 
 interface ToolDispatcherProps {
@@ -164,6 +168,8 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
     // Productivity
     case 'pomodoro-timer':
       return <PomodoroComponent />;
+    case 'stopwatch-timer':
+      return <StopwatchComponent />;
     case 'password-generator':
       return <PasswordGeneratorComponent />;
     case 'random-decision-picker':
@@ -184,6 +190,16 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
       return <RatioCalculatorComponent />;
     case 'average-calculator':
       return <AverageCalculatorComponent />;
+
+    // Everyday Utilities
+    case 'tally-counter':
+      return <TallyCounterComponent />;
+
+    // Finance & Calculators
+    case 'loan-emi-calculator':
+      return <LoanEmiCalculatorComponent />;
+    case 'tip-discount-calculator':
+      return <TipDiscountCalculatorComponent />;
 
     default:
       return <UniversalUnitConverterComponent />;

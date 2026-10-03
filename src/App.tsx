@@ -60,17 +60,33 @@ const MainRouter: React.FC = () => {
   if (path === '/advertising-policy') return <AdvertisingPolicyPage />;
 
   // 5. Category Routes (e.g. /pdf-tools, /image-tools)
-  const categoryKey = path.replace('/', '') as ToolCategory;
-  if (CATEGORIES[categoryKey]) {
-    return <CategoryPage category={CATEGORIES[categoryKey]} />;
+  const rawCategory = path.replace(/^\//, '');
+  const matchedCategory =
+    CATEGORIES[rawCategory as ToolCategory] ||
+    Object.values(CATEGORIES).find(
+      (c) =>
+        c.slug === rawCategory ||
+        c.id === rawCategory ||
+        (rawCategory === 'education-math' && c.id === 'educational-tools') ||
+        (rawCategory === 'qr-barcode' && c.id === 'qr-barcode-tools') ||
+        (rawCategory === 'date-time' && c.id === 'date-time-tools')
+    );
+
+  if (matchedCategory) {
+    return <CategoryPage category={matchedCategory} />;
   }
 
   // Check if someone navigated to /:category/:slug
   const parts = path.split('/').filter(Boolean);
-  if (parts.length === 2 && CATEGORIES[parts[0] as ToolCategory]) {
-    const tool = getToolBySlug(parts[1]);
-    if (tool) {
-      return <ToolDetailPage tool={tool} />;
+  if (parts.length === 2) {
+    const cat =
+      CATEGORIES[parts[0] as ToolCategory] ||
+      Object.values(CATEGORIES).find((c) => c.slug === parts[0] || c.id === parts[0]);
+    if (cat) {
+      const tool = getToolBySlug(parts[1]);
+      if (tool) {
+        return <ToolDetailPage tool={tool} />;
+      }
     }
   }
 

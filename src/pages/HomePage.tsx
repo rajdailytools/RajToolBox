@@ -118,7 +118,7 @@ export const HomePage: React.FC = () => {
             </div>
             <div className="flex items-center justify-center gap-1.5">
               <Layers className="w-4 h-4 text-[#3B82F6]" />
-              <span>12 Categories</span>
+              <span>16 Categories</span>
             </div>
           </div>
         </div>

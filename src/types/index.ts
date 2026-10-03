@@ -10,7 +10,11 @@ export type ToolCategory =
   | 'file-data-tools'
   | 'productivity-tools'
   | 'date-time-tools'
-  | 'educational-tools';
+  | 'educational-tools'
+  | 'color-design'
+  | 'security-privacy'
+  | 'everyday-utilities'
+  | 'finance-calculators';
 
 export interface CategoryInfo {
   id: ToolCategory;

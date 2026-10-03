@@ -62,11 +62,11 @@ export const RajToolBoxLogo: React.FC<RajToolBoxLogoProps> = ({
 
   return (
     <svg
-      viewBox="0 0 460 100"
+      viewBox="0 0 520 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      style={{ aspectRatio: '460 / 100' }}
+      style={{ aspectRatio: '520 / 100', overflow: 'visible' }}
       aria-label="RajToolBox"
       role="img"
     >
@@ -111,13 +111,11 @@ export const RajToolBoxLogo: React.FC<RajToolBoxLogoProps> = ({
       {/* 2. Brand Wordmark: "Raj" (Charcoal / Dark adaptive) + "ToolBox" (Hot Pink) */}
       <text
         x="108"
-        y="68"
+        y="67"
         fontFamily="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
         fontWeight="800"
-        fontSize="54"
-        letterSpacing="-0.03em"
-        textLength="330"
-        lengthAdjust="spacing"
+        fontSize="52"
+        letterSpacing="-0.025em"
       >
         <tspan className="fill-[#18181B] dark:fill-[#F4F4F5]">Raj</tspan>
         <tspan fill="#EC4899">ToolBox</tspan>
