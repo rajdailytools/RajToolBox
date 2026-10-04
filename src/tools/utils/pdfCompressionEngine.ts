@@ -1,5 +1,15 @@
-import { PDFDocument, PDFName, PDFNumber, PDFRawStream } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFNumber } from 'pdf-lib';
 import pako from 'pako';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Initialize PDF.js worker URL for browser environments
+if (typeof window !== 'undefined') {
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '3.11.174'}/build/pdf.worker.min.js`;
+  } catch {
+    // fallback to main thread if worker script fails
+  }
+}
 
 export type PdfClassification =
   | 'scanned'
@@ -20,13 +30,6 @@ export interface PdfAnalysisReport {
   isEncrypted: boolean;
   classification: PdfClassification;
   estimatedImagePercentage: number;
-}
-
-export interface CompressionPassConfig {
-  scale: number;
-  jpegQuality: number;
-  stripMetadata: boolean;
-  removeAnnotations: boolean;
 }
 
 export interface CompressionResult {
@@ -156,7 +159,7 @@ export async function analyzePdfDocument(buffer: ArrayBuffer): Promise<PdfAnalys
 }
 
 /**
- * Re-compresses a single image stream from a PDF using browser canvas.
+ * Recompresses an individual embedded Image XObject in pdf-lib.
  */
 async function recompressImageStream(
   obj: any,
@@ -175,8 +178,8 @@ async function recompressImageStream(
   const origWidth = Number(dict.get(PDFName.of('Width'))?.toString() || 0);
   const origHeight = Number(dict.get(PDFName.of('Height'))?.toString() || 0);
 
-  // 1. DCTDecode (Standard JPEG)
-  if (filter === '/DCTDecode') {
+  // 1. DCTDecode (Standard embedded JPEG)
+  if (filter === '/DCTDecode' || (!filter && rawBytes[0] === 0xff && rawBytes[1] === 0xd8)) {
     try {
       const blob = new Blob([rawBytes as unknown as BlobPart], { type: 'image/jpeg' });
       const imgUrl = URL.createObjectURL(blob);
@@ -193,11 +196,10 @@ async function recompressImageStream(
       const h = img.naturalHeight || origHeight;
       if (!w || !h) return false;
 
-      // Calculate target dimensions, preserving aspect ratio and ensuring readability
-      let targetW = Math.max(300, Math.round(w * scale));
-      let targetH = Math.max(300, Math.round(h * scale));
-      if (w < 300) targetW = w;
-      if (h < 300) targetH = h;
+      let targetW = Math.max(250, Math.round(w * scale));
+      let targetH = Math.max(250, Math.round(h * scale));
+      if (w < 250) targetW = w;
+      if (h < 250) targetH = h;
 
       const canvas = document.createElement('canvas');
       canvas.width = targetW;
@@ -216,7 +218,6 @@ async function recompressImageStream(
       if (!compressedBlob) return false;
       const newBytes = new Uint8Array(await compressedBlob.arrayBuffer());
 
-      // Only substitute if it actually reduced the stream size
       if (newBytes.length < rawBytes.length) {
         obj.contents = newBytes;
         dict.set(PDFName.of('Length'), PDFNumber.of(newBytes.length));
@@ -228,13 +229,13 @@ async function recompressImageStream(
         dict.delete(PDFName.of('DecodeParms'));
         return true;
       }
-    } catch (err) {
-      console.warn('DCTDecode recompression skipped:', err);
+    } catch {
+      // ignore and keep original stream
     }
     return false;
   }
 
-  // 2. FlateDecode (PNG/lossless raster stream)
+  // 2. FlateDecode (Deflated raw raster stream)
   if (filter === '/FlateDecode' && origWidth > 10 && origHeight > 10) {
     try {
       const colorSpace = dict.get(PDFName.of('ColorSpace'))?.toString();
@@ -242,7 +243,7 @@ async function recompressImageStream(
 
       if (bits === 8) {
         const inflated = pako.inflate(rawBytes);
-        let channels = 3; // default RGB
+        let channels = 3;
         if (colorSpace === '/DeviceGray') channels = 1;
         else if (colorSpace === '/DeviceCMYK') channels = 4;
         else if (inflated.length === origWidth * origHeight * 4) channels = 4;
@@ -273,7 +274,6 @@ async function recompressImageStream(
               data[outIdx + 2] = gray;
               data[outIdx + 3] = 255;
             } else if (channels === 4) {
-              // CMYK approximation to RGB
               const inIdx = i * 4;
               const c = inflated[inIdx] / 255;
               const m = inflated[inIdx + 1] / 255;
@@ -288,11 +288,10 @@ async function recompressImageStream(
 
           ctx.putImageData(imgData, 0, 0);
 
-          // If scaling down
-          let targetW = Math.max(300, Math.round(origWidth * scale));
-          let targetH = Math.max(300, Math.round(origHeight * scale));
-          if (origWidth < 300) targetW = origWidth;
-          if (origHeight < 300) targetH = origHeight;
+          let targetW = Math.max(250, Math.round(origWidth * scale));
+          let targetH = Math.max(250, Math.round(origHeight * scale));
+          if (origWidth < 250) targetW = origWidth;
+          if (origHeight < 250) targetH = origHeight;
 
           let finalCanvas = canvas;
           if (targetW !== origWidth || targetH !== origHeight) {
@@ -315,7 +314,6 @@ async function recompressImageStream(
           if (!compressedBlob) return false;
           const newBytes = new Uint8Array(await compressedBlob.arrayBuffer());
 
-          // Conversion from uncompressed Flate raw pixels to JPEG is typically 80-95% smaller
           if (newBytes.length < rawBytes.length) {
             obj.contents = newBytes;
             dict.set(PDFName.of('Length'), PDFNumber.of(newBytes.length));
@@ -329,8 +327,8 @@ async function recompressImageStream(
           }
         }
       }
-    } catch (err) {
-      console.warn('FlateDecode recompression skipped:', err);
+    } catch {
+      // ignore and keep original
     }
   }
 
@@ -338,17 +336,21 @@ async function recompressImageStream(
 }
 
 /**
- * Runs a single compression pass on a fresh PDF buffer.
+ * Executes a structural / image pass via pdf-lib.
  */
-async function executePass(
+async function executePdfLibPass(
   buffer: ArrayBuffer,
-  config: CompressionPassConfig,
-  enableImageCompression: boolean
-): Promise<{ bytes: Uint8Array; imagesModified: number }> {
+  options: {
+    stripMetadata: boolean;
+    removeAnnotations: boolean;
+    scale: number;
+    jpegQuality: number;
+    optimizeImages: boolean;
+  }
+): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
 
-  // 1. Metadata cleanup
-  if (config.stripMetadata) {
+  if (options.stripMetadata) {
     if (pdfDoc.catalog.has(PDFName.of('Metadata'))) {
       pdfDoc.catalog.delete(PDFName.of('Metadata'));
     }
@@ -360,8 +362,7 @@ async function executePass(
     pdfDoc.setCreator('RajToolBox.com');
   }
 
-  // 2. Annotation cleanup if requested
-  if (config.removeAnnotations) {
+  if (options.removeAnnotations) {
     const pages = pdfDoc.getPages();
     for (const page of pages) {
       if (page.node.has(PDFName.of('Annots'))) {
@@ -370,35 +371,105 @@ async function executePass(
     }
   }
 
-  let imagesModified = 0;
-
-  // 3. Image optimization pass
-  if (enableImageCompression) {
+  if (options.optimizeImages) {
     for (const [, obj] of pdfDoc.context.enumerateIndirectObjects()) {
       if (!obj || !(obj as any).dict || typeof (obj as any).dict.get !== 'function') {
         continue;
       }
       const dict = (obj as any).dict;
       if (dict.get(PDFName.of('Subtype'))?.toString() === '/Image') {
-        const modified = await recompressImageStream(obj, config.scale, config.jpegQuality);
-        if (modified) imagesModified++;
+        await recompressImageStream(obj, options.scale, options.jpegQuality);
       }
     }
   }
 
-  // 4. Save with high-density object stream compression
-  const bytes = await pdfDoc.save({
+  return await pdfDoc.save({
     useObjectStreams: true,
     addDefaultPage: false,
-    objectsPerTick: 30
+    objectsPerTick: 40
   });
-
-  return { bytes, imagesModified };
 }
 
 /**
- * Progressive Target-Size Compression Engine.
- * Attempts multiple passes to hit the target size safely without destroying readability.
+ * Deep page-level raster progressive optimization using PDF.js.
+ * This handles scanned documents, multi-page PDFs with embedded JBIG2/JPX/complex vectors,
+ * and high-resolution camera scans to reach aggressive targets like 40 KB, 100 KB, 200 KB.
+ */
+async function executePageRasterPass(
+  buffer: ArrayBuffer,
+  targetBytes: number,
+  scale: number,
+  quality: number
+): Promise<Uint8Array | null> {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return null;
+  }
+
+  try {
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(buffer),
+      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapPacked: true,
+      useSystemFonts: true
+    });
+    const pdf = await loadingTask.promise;
+    const numPages = pdf.numPages;
+    if (numPages === 0) return null;
+
+    // Load original with pdf-lib to read exact page dimension points
+    const origPdfLibDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    const newDoc = await PDFDocument.create();
+
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      await page.render({
+        canvasContext: ctx,
+        viewport
+      }).promise;
+
+      const pageJpgBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      });
+
+      if (!pageJpgBlob) return null;
+
+      const pageJpgBytes = new Uint8Array(await pageJpgBlob.arrayBuffer());
+      const embeddedJpg = await newDoc.embedJpg(pageJpgBytes);
+
+      // Keep original page points
+      const origPage = origPdfLibDoc.getPage(pageNum - 1);
+      const { width: origW, height: origH } = origPage.getSize();
+
+      const newPage = newDoc.addPage([origW, origH]);
+      newPage.drawImage(embeddedJpg, {
+        x: 0,
+        y: 0,
+        width: origW,
+        height: origH
+      });
+    }
+
+    newDoc.setProducer('RajToolBox PDF Compressor');
+    newDoc.setCreator('RajToolBox.com');
+
+    return await newDoc.save({ useObjectStreams: true });
+  } catch (err) {
+    console.warn('Page raster pass skipped or failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Main Progressive Target-Size Compression Engine.
+ * Runs multi-pass optimization and strictly measures actual output Blobs.
  */
 export async function compressPdfWithEngine(
   file: File,
@@ -413,11 +484,11 @@ export async function compressPdfWithEngine(
   const buffer = await file.arrayBuffer();
   const originalSize = file.size;
 
-  options.onProgress?.('Analyzing document structure & resources...', 15);
+  options.onProgress?.('Analyzing document structure & resources...', 10);
   const analysis = await analyzePdfDocument(buffer);
 
   if (analysis.isEncrypted) {
-    throw new Error('This PDF is password-protected. Please remove the password protection before compressing.');
+    throw new Error('This PDF is password-protected. Please remove password protection before compressing.');
   }
 
   let passesRun = 0;
@@ -427,52 +498,34 @@ export async function compressPdfWithEngine(
   // -------------------------------------------------------------
   // PASS 1: Baseline Structural & Metadata Optimization
   // -------------------------------------------------------------
-  options.onProgress?.('Pass 1: Cleaning metadata & deflating streams...', 30);
+  options.onProgress?.('Pass 1: Cleaning metadata & deflating streams...', 25);
   passesRun++;
 
-  const pass1 = await executePass(
-    buffer,
-    {
-      scale: 1.0,
-      jpegQuality: 0.9,
-      stripMetadata: options.stripMetadata,
-      removeAnnotations: options.removeAnnotations
-    },
-    false // no lossy image compression in baseline pass
-  );
+  const pass1Bytes = await executePdfLibPass(buffer, {
+    stripMetadata: options.stripMetadata,
+    removeAnnotations: options.removeAnnotations,
+    scale: 1.0,
+    jpegQuality: 0.9,
+    optimizeImages: false
+  });
 
-  if (pass1.bytes.length < bestSize) {
-    bestBytes = pass1.bytes;
-    bestSize = pass1.bytes.length;
+  if (pass1Bytes.length < bestSize) {
+    bestBytes = pass1Bytes;
+    bestSize = pass1Bytes.length;
   }
 
-  // Check if non-target modes or already reached
   if (compressionLevel === 'basic') {
-    // Basic mode finishes here (lossless / light)
-    return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Basic optimization complete.');
+    return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Basic lossless optimization complete.');
   }
 
   if (targetBytes > 0 && bestSize <= targetBytes) {
     return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Target reached on baseline cleanup!');
   }
 
-  // If there are no images in the PDF (e.g. pure text or vector), further image passes won't help
-  if (analysis.imageCount === 0) {
-    return finalizeResult(
-      bestBytes,
-      buffer,
-      originalSize,
-      targetBytes,
-      analysis,
-      passesRun,
-      'Text/vector document optimized. No embedded raster images detected.'
-    );
-  }
-
   // -------------------------------------------------------------
-  // PASS 2: Moderate Image Optimization
+  // PASS 2: Embedded Image Stream Recompression (pdf-lib)
   // -------------------------------------------------------------
-  options.onProgress?.('Pass 2: Optimizing embedded images & resolution...', 50);
+  options.onProgress?.('Pass 2: Optimizing embedded image streams...', 45);
   passesRun++;
 
   let p2Scale = 0.85;
@@ -484,7 +537,6 @@ export async function compressPdfWithEngine(
   } else if (compressionLevel === 'target') {
     const ratio = targetBytes / bestSize;
     if (ratio < 0.25) {
-      // Aggressive target (e.g. 40KB from 963KB)
       p2Scale = 0.6;
       p2Quality = 0.45;
     } else if (ratio < 0.6) {
@@ -493,20 +545,17 @@ export async function compressPdfWithEngine(
     }
   }
 
-  const pass2 = await executePass(
-    buffer,
-    {
-      scale: p2Scale,
-      jpegQuality: p2Quality,
-      stripMetadata: options.stripMetadata,
-      removeAnnotations: options.removeAnnotations
-    },
-    true
-  );
+  const pass2Bytes = await executePdfLibPass(buffer, {
+    stripMetadata: options.stripMetadata,
+    removeAnnotations: options.removeAnnotations,
+    scale: p2Scale,
+    jpegQuality: p2Quality,
+    optimizeImages: true
+  });
 
-  if (pass2.bytes.length < bestSize) {
-    bestBytes = pass2.bytes;
-    bestSize = pass2.bytes.length;
+  if (pass2Bytes.length < bestSize) {
+    bestBytes = pass2Bytes;
+    bestSize = pass2Bytes.length;
   }
 
   if (compressionLevel === 'recommended' || (targetBytes > 0 && bestSize <= targetBytes)) {
@@ -514,58 +563,68 @@ export async function compressPdfWithEngine(
   }
 
   // -------------------------------------------------------------
-  // PASS 3: Deep Target Optimization (if target not reached)
+  // PASS 3: Deep Progressive Tuning (Target Mode or Strong Mode)
   // -------------------------------------------------------------
   if (compressionLevel === 'target' || compressionLevel === 'strong') {
     if (targetBytes > 0 && bestSize > targetBytes) {
-      options.onProgress?.('Pass 3: Progressive downsampling toward target...', 75);
+      options.onProgress?.('Pass 3: Progressive deep compression toward target...', 65);
       passesRun++;
 
       const ratio = targetBytes / bestSize;
       const p3Scale = ratio < 0.3 ? 0.45 : 0.6;
       const p3Quality = ratio < 0.3 ? 0.35 : 0.48;
 
-      const pass3 = await executePass(
-        buffer,
-        {
-          scale: p3Scale,
-          jpegQuality: p3Quality,
-          stripMetadata: options.stripMetadata,
-          removeAnnotations: options.removeAnnotations
-        },
-        true
-      );
+      const pass3Bytes = await executePdfLibPass(buffer, {
+        stripMetadata: options.stripMetadata,
+        removeAnnotations: options.removeAnnotations,
+        scale: p3Scale,
+        jpegQuality: p3Quality,
+        optimizeImages: true
+      });
 
-      if (pass3.bytes.length < bestSize) {
-        bestBytes = pass3.bytes;
-        bestSize = pass3.bytes.length;
+      if (pass3Bytes.length < bestSize) {
+        bestBytes = pass3Bytes;
+        bestSize = pass3Bytes.length;
       }
     }
   }
 
   // -------------------------------------------------------------
-  // PASS 4: Maximum Safe Quality Floor (if aggressive target still pending)
+  // PASS 4: Raster Progressive Engine for Scanned / Stubborn PDFs
+  // If target size is still not reached and target is aggressive (e.g. 40KB from 963KB)
   // -------------------------------------------------------------
   if (compressionLevel === 'target' && targetBytes > 0 && bestSize > targetBytes) {
     const ratio = targetBytes / bestSize;
-    if (ratio < 0.5) {
-      options.onProgress?.('Pass 4: Final safe pass at readability threshold...', 90);
+    if (ratio < 0.8 && analysis.pageCount > 0 && analysis.pageCount <= 20) {
+      options.onProgress?.('Pass 4: Progressive page rasterization at target resolution...', 85);
       passesRun++;
 
-      const pass4 = await executePass(
-        buffer,
-        {
-          scale: 0.38,
-          jpegQuality: 0.28,
-          stripMetadata: options.stripMetadata,
-          removeAnnotations: options.removeAnnotations
-        },
-        true
-      );
+      // Compute scale and quality based on target budget
+      const targetScale = ratio < 0.2 ? 0.75 : 0.95;
+      const targetQuality = Math.max(0.25, Math.min(0.65, ratio * 0.9));
 
-      if (pass4.bytes.length < bestSize) {
-        bestBytes = pass4.bytes;
-        bestSize = pass4.bytes.length;
+      const pass4Bytes = await executePageRasterPass(buffer, targetBytes, targetScale, targetQuality);
+
+      if (pass4Bytes && pass4Bytes.length < bestSize) {
+        bestBytes = pass4Bytes;
+        bestSize = pass4Bytes.length;
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // PASS 5: Readability Floor Guard (Final Safe Attempt)
+  // -------------------------------------------------------------
+  if (compressionLevel === 'target' && targetBytes > 0 && bestSize > targetBytes) {
+    const ratio = targetBytes / bestSize;
+    if (ratio < 0.5 && analysis.pageCount > 0 && analysis.pageCount <= 10) {
+      options.onProgress?.('Pass 5: Maximum safe compression at readability limit...', 95);
+      passesRun++;
+
+      const pass5Bytes = await executePageRasterPass(buffer, targetBytes, 0.6, 0.28);
+      if (pass5Bytes && pass5Bytes.length < bestSize) {
+        bestBytes = pass5Bytes;
+        bestSize = pass5Bytes.length;
       }
     }
   }
@@ -582,10 +641,10 @@ function finalizeResult(
   passesRun: number,
   defaultMsg: string
 ): CompressionResult {
-  // Safe guard: Never output a file larger than original
   let finalBlob: Blob;
   let finalSize: number;
 
+  // Never return an output larger than original
   if (!bestBytes || bestBytes.length >= originalSize) {
     finalBlob = new Blob([originalBuffer], { type: 'application/pdf' });
     finalSize = originalSize;
@@ -599,9 +658,9 @@ function finalizeResult(
   let statusMessage = defaultMsg;
   if (targetBytes > 0) {
     if (targetReached) {
-      statusMessage = 'Target reached! Your compressed PDF meets your requested limit.';
+      statusMessage = '✓ Target reached: Your compressed PDF meets your requested limit.';
     } else {
-      statusMessage = 'Maximum safe compression reached while preserving document legibility.';
+      statusMessage = 'Target size could not be reached while maintaining reasonable quality. Try a larger target.';
     }
   }
 

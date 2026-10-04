@@ -13,18 +13,18 @@ import {
   AlertTriangle,
   FileText,
   Sparkles,
-  Layers,
-  ChevronRight,
   ExternalLink,
   MessageCircle,
   Send,
   Mail,
   X,
-  ShieldCheck,
   Info,
-  CheckCircle2,
-  Maximize2
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
 import { useApp } from '../../context/AppContext';
 import {
   compressPdfWithEngine,
@@ -51,6 +51,208 @@ export interface FileQueueItem {
 }
 
 export type CompressionLevel = 'basic' | 'recommended' | 'strong' | 'target';
+
+// Interactive canvas-based PDF previewer for guaranteed rendering across iOS, Android, and Desktop
+interface PdfCanvasPreviewProps {
+  blob: Blob;
+  name: string;
+  fallbackUrl?: string;
+}
+
+const PdfCanvasPreview: React.FC<PdfCanvasPreviewProps> = ({ blob, name, fallbackUrl }) => {
+  const [numPages, setNumPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [scale, setScale] = useState<number>(1.2);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [canvasFailed, setCanvasFailed] = useState<boolean>(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const renderTaskRef = useRef<any>(null);
+  const pdfDocRef = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPdf() {
+      try {
+        setLoading(true);
+        setCanvasFailed(false);
+        const arrayBuffer = await blob.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({
+          data: new Uint8Array(arrayBuffer),
+          cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+          cMapPacked: true,
+          useSystemFonts: true
+        });
+        const doc = await loadingTask.promise;
+        if (cancelled) return;
+        pdfDocRef.current = doc;
+        setNumPages(doc.numPages);
+        setCurrentPage(1);
+        setLoading(false);
+      } catch (err) {
+        if (cancelled) return;
+        console.warn('Canvas PDF load failed, falling back to object viewer:', err);
+        setCanvasFailed(true);
+        setLoading(false);
+      }
+    }
+
+    loadPdf();
+
+    return () => {
+      cancelled = true;
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch {}
+      }
+    };
+  }, [blob]);
+
+  useEffect(() => {
+    if (!pdfDocRef.current || !canvasRef.current || loading || canvasFailed) return;
+
+    let cancelled = false;
+
+    async function renderPage() {
+      try {
+        if (renderTaskRef.current) {
+          try {
+            renderTaskRef.current.cancel();
+          } catch {}
+        }
+
+        const page = await pdfDocRef.current.getPage(currentPage);
+        if (cancelled) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const containerWidth = canvas.parentElement?.clientWidth || 600;
+        const baseViewport = page.getViewport({ scale: 1.0 });
+        let fitScale = scale;
+        if (baseViewport.width * scale > containerWidth - 32) {
+          fitScale = Math.max(0.45, (containerWidth - 32) / baseViewport.width);
+        }
+
+        const viewport = page.getViewport({ scale: fitScale });
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const task = page.render({
+          canvasContext: ctx,
+          viewport
+        });
+        renderTaskRef.current = task;
+        await task.promise;
+      } catch (err: any) {
+        if (err?.name === 'RenderingCancelledException') return;
+        console.warn('Page render error:', err);
+      }
+    }
+
+    renderPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, scale, loading, canvasFailed]);
+
+  if (canvasFailed && fallbackUrl) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-4">
+        <object data={fallbackUrl} type="application/pdf" className="w-full h-full">
+          <iframe src={fallbackUrl} title={name} className="w-full h-full border-0">
+            <div className="p-8 text-center max-w-md mx-auto space-y-4">
+              <FileText className="w-12 h-12 text-[#71717A] mx-auto" />
+              <p className="text-sm font-semibold text-[#18181B] dark:text-[#F4F4F5]">
+                Direct in-browser PDF preview is unavailable on this device. You can download the compressed PDF directly below.
+              </p>
+              <a
+                href={fallbackUrl}
+                download={`compressed_${name}`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] text-white font-bold text-xs shadow-md"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Compressed PDF</span>
+              </a>
+            </div>
+          </iframe>
+        </object>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-between overflow-hidden">
+      {/* Navigation / Zoom Bar */}
+      <div className="w-full py-2.5 px-4 bg-white/90 dark:bg-[#18181B]/90 backdrop-blur-xs border-b border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] disabled:opacity-40 font-bold hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] cursor-pointer"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Prev</span>
+          </button>
+          <span className="font-bold text-[#18181B] dark:text-[#F4F4F5] px-2">
+            Page {currentPage} of {numPages}
+          </span>
+          <button
+            type="button"
+            disabled={currentPage >= numPages}
+            onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] disabled:opacity-40 font-bold hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] cursor-pointer"
+          >
+            <span>Next</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setScale((s) => Math.max(0.6, parseFloat((s - 0.2).toFixed(1))))}
+            className="p-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] font-bold text-xs hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] cursor-pointer"
+            title="Zoom out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <span className="text-xs text-[#71717A] min-w-[45px] text-center font-mono font-semibold">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => setScale((s) => Math.min(2.5, parseFloat((s + 0.2).toFixed(1))))}
+            className="p-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] font-bold text-xs hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] cursor-pointer"
+            title="Zoom in"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Rendered Canvas Container */}
+      <div className="flex-1 w-full overflow-auto p-4 sm:p-6 flex items-center justify-center bg-zinc-200/80 dark:bg-zinc-950/80">
+        {loading ? (
+          <div className="flex flex-col items-center gap-3 text-xs text-[#71717A]">
+            <RefreshCw className="w-6 h-6 animate-spin text-[#EC4899]" />
+            <span>Rendering actual compressed PDF document...</span>
+          </div>
+        ) : (
+          <div className="max-w-full shadow-2xl rounded-xl overflow-hidden border border-zinc-300 dark:border-zinc-800 bg-white">
+            <canvas ref={canvasRef} className="block max-w-full h-auto" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const PdfCompressorTool: React.FC = () => {
   const { showToast } = useApp();
@@ -224,7 +426,6 @@ export const PdfCompressorTool: React.FC = () => {
 
   // Perform genuine PDF compression via the progressive target-size engine
   const compressSingleFile = async (item: FileQueueItem): Promise<FileQueueItem> => {
-    // Revoke previous object URL if any
     if (item.previewUrl) {
       URL.revokeObjectURL(item.previewUrl);
     }
@@ -294,7 +495,6 @@ export const PdfCompressorTool: React.FC = () => {
     setStatusMessage('Compression complete!');
     showToast(`Successfully processed ${queue.length} document${queue.length > 1 ? 's' : ''}!`, 'success');
 
-    // Auto-select the first completed item for results view
     const firstSuccess = updatedQueue.find((i) => i.status === 'completed');
     if (firstSuccess) {
       setActiveFileId(firstSuccess.id);
@@ -333,12 +533,10 @@ export const PdfCompressorTool: React.FC = () => {
         showToast('Document shared successfully!', 'success');
         return;
       } catch {
-        // User cancelled share
         return;
       }
     }
 
-    // Fallback: Copy link
     copyLink();
   };
 
@@ -505,8 +703,8 @@ export const PdfCompressorTool: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    {/* 👁️ WORKING VIEW / PREVIEW BUTTON */}
-                    {item.status === 'completed' && item.previewUrl && (
+                    {/* 👁️ WORKING VIEW / PREVIEW BUTTON: Opens the actual compressed PDF */}
+                    {item.status === 'completed' && item.compressedBlob && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -520,7 +718,7 @@ export const PdfCompressorTool: React.FC = () => {
                       </button>
                     )}
 
-                    {/* Download Button */}
+                    {/* Download Button: Uses exact same compressedBlob */}
                     {item.status === 'completed' && item.previewUrl && (
                       <a
                         href={item.previewUrl}
@@ -617,7 +815,7 @@ export const PdfCompressorTool: React.FC = () => {
                     <Sparkles className="w-4 h-4 text-[#FACC15]" />
                     Target Size Goal
                   </span>
-                  <span className="text-[11px] text-[#71717A]">Genuine multi-pass optimization</span>
+                  <span className="text-[11px] text-[#71717A]">Genuine multi-pass progressive engine</span>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -678,7 +876,7 @@ export const PdfCompressorTool: React.FC = () => {
                 <div className="flex items-start gap-2 text-[11px] text-[#854D0E] dark:text-[#FACC15] bg-[#FEF3C7]/60 dark:bg-[#FACC15]/10 p-3 rounded-xl">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
-                    <strong>Honest Quality Guard:</strong> The target is an active goal. The engine runs up to 4 progressive optimization passes. If a document reaches its safe readability limit without reaching an ultra-small target, it honestly shows the best achievable size without destroying legibility.
+                    <strong>Honest Quality Guard:</strong> The target size is an active optimization goal. The engine runs progressive passes to shrink the file toward your target. If a document reaches its safe readability limit without reaching an ultra-small target, it honestly shows the best achievable size without destroying legibility.
                   </p>
                 </div>
               </div>
@@ -904,8 +1102,8 @@ export const PdfCompressorTool: React.FC = () => {
         </div>
       )}
 
-      {/* 5. DEDICATED PREMIUM FULL PDF PREVIEW MODAL */}
-      {previewItem && previewItem.previewUrl && (
+      {/* 5. DEDICATED WORKING PDF PREVIEW MODAL */}
+      {previewItem && previewItem.compressedBlob && (
         <div
           role="dialog"
           aria-modal="true"
@@ -941,16 +1139,18 @@ export const PdfCompressorTool: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <a
-                  href={previewItem.previewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] transition-all"
-                  title="Open in new window"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>New Window</span>
-                </a>
+                {previewItem.previewUrl && (
+                  <a
+                    href={previewItem.previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] transition-all"
+                    title="Open in new window"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>New Window</span>
+                  </a>
+                )}
                 <button
                   type="button"
                   onClick={() => setPreviewItem(null)}
@@ -962,41 +1162,19 @@ export const PdfCompressorTool: React.FC = () => {
               </div>
             </div>
 
-            {/* Modal Body: Actual Generated PDF Preview */}
-            <div className="flex-1 bg-zinc-100 dark:bg-zinc-900 relative overflow-hidden flex flex-col items-center justify-center">
-              <object
-                data={previewItem.previewUrl}
-                type="application/pdf"
-                className="w-full h-full"
-              >
-                <iframe
-                  src={previewItem.previewUrl}
-                  title={`Preview of compressed ${previewItem.name}`}
-                  className="w-full h-full border-0"
-                >
-                  {/* Fallback if browser PDF rendering is unavailable */}
-                  <div className="p-8 text-center max-w-md mx-auto space-y-4">
-                    <FileText className="w-12 h-12 text-[#71717A] mx-auto" />
-                    <p className="text-sm font-semibold text-[#18181B] dark:text-[#F4F4F5]">
-                      Preview is unavailable in this browser. You can still download the compressed PDF.
-                    </p>
-                    <a
-                      href={previewItem.previewUrl}
-                      download={`compressed_${previewItem.name}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] text-white font-bold text-xs shadow-md"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download PDF ({formatSize(previewItem.compressedSize)})</span>
-                    </a>
-                  </div>
-                </iframe>
-              </object>
+            {/* Modal Body: High-fidelity Canvas PDF Viewer rendering actual compressed Blob */}
+            <div className="flex-1 bg-zinc-100 dark:bg-zinc-900 relative overflow-hidden flex flex-col">
+              <PdfCanvasPreview
+                blob={previewItem.compressedBlob}
+                name={previewItem.name}
+                fallbackUrl={previewItem.previewUrl}
+              />
             </div>
 
             {/* Modal Footer Controls */}
             <div className="p-3 sm:p-4 border-t border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#202026] flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-[#71717A]">
-                Showing actual generated output blob ({formatSize(previewItem.compressedSize)})
+                Showing actual generated compressed document ({formatSize(previewItem.compressedSize)})
               </div>
 
               <div className="flex items-center gap-2">
@@ -1009,14 +1187,16 @@ export const PdfCompressorTool: React.FC = () => {
                   <span>Share</span>
                 </button>
 
-                <a
-                  href={previewItem.previewUrl}
-                  download={`compressed_${previewItem.name}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] shadow-sm transition-all cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download PDF</span>
-                </a>
+                {previewItem.previewUrl && (
+                  <a
+                    href={previewItem.previewUrl}
+                    download={`compressed_${previewItem.name}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] shadow-sm transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download PDF</span>
+                  </a>
+                )}
 
                 <button
                   type="button"
