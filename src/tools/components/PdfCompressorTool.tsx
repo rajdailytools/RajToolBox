@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import { PDFDocument } from 'pdf-lib';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Upload,
   Plus,
@@ -19,9 +18,18 @@ import {
   ExternalLink,
   MessageCircle,
   Send,
-  Mail
+  Mail,
+  X,
+  ShieldCheck,
+  Info,
+  CheckCircle2,
+  Maximize2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import {
+  compressPdfWithEngine,
+  PdfAnalysisReport
+} from '../utils/pdfCompressionEngine';
 
 export interface FileQueueItem {
   id: string;
@@ -32,9 +40,14 @@ export interface FileQueueItem {
   compressedSize: number;
   status: 'pending' | 'compressing' | 'completed' | 'error';
   targetReached: boolean | null;
+  targetBytes: number;
   errorMessage?: string;
   pageCount?: number;
   previewUrl?: string;
+  hasDigitalSignature?: boolean;
+  classification?: string;
+  statusExplanation?: string;
+  passesRun?: number;
 }
 
 export type CompressionLevel = 'basic' | 'recommended' | 'strong' | 'target';
@@ -49,8 +62,8 @@ export const PdfCompressorTool: React.FC = () => {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
   // Compression settings
-  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('recommended');
-  const [targetPreset, setTargetPreset] = useState<string>('500kb');
+  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('target');
+  const [targetPreset, setTargetPreset] = useState<string>('40kb');
   const [customTargetValue, setCustomTargetValue] = useState<number>(200);
   const [customTargetUnit, setCustomTargetUnit] = useState<'KB' | 'MB'>('KB');
   const [stripMetadata, setStripMetadata] = useState<boolean>(true);
@@ -61,9 +74,20 @@ export const PdfCompressorTool: React.FC = () => {
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>('');
 
-  // Preview modal / state
+  // Preview modal state
   const [previewItem, setPreviewItem] = useState<FileQueueItem | null>(null);
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      queue.forEach((item) => {
+        if (item.previewUrl) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      });
+    };
+  }, []);
 
   const formatSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -77,8 +101,8 @@ export const PdfCompressorTool: React.FC = () => {
     if (compressionLevel !== 'target') return 0;
     if (targetPreset === 'custom') {
       return customTargetUnit === 'MB'
-        ? customTargetValue * 1024 * 1024
-        : customTargetValue * 1024;
+        ? Math.round(customTargetValue * 1024 * 1024)
+        : Math.round(customTargetValue * 1024);
     }
     const map: Record<string, number> = {
       '20kb': 20 * 1024,
@@ -93,7 +117,42 @@ export const PdfCompressorTool: React.FC = () => {
       '2mb': 2 * 1024 * 1024,
       '5mb': 5 * 1024 * 1024,
     };
-    return map[targetPreset] || 500 * 1024;
+    return map[targetPreset] || 40 * 1024;
+  };
+
+  const getTargetPresetLabel = (): string => {
+    if (targetPreset === 'custom') {
+      return `${customTargetValue} ${customTargetUnit}`;
+    }
+    const map: Record<string, string> = {
+      '20kb': '20 KB',
+      '30kb': '30 KB',
+      '40kb': '40 KB',
+      '50kb': '50 KB',
+      '100kb': '100 KB',
+      '200kb': '200 KB',
+      '300kb': '300 KB',
+      '500kb': '500 KB',
+      '1mb': '1 MB',
+      '2mb': '2 MB',
+      '5mb': '5 MB',
+    };
+    return map[targetPreset] || 'Target Size';
+  };
+
+  const getCompressButtonLabel = (): string => {
+    const count = queue.length;
+    if (compressionLevel === 'target') {
+      const targetLabel = getTargetPresetLabel();
+      if (count <= 1) {
+        return `Compress to ${targetLabel}`;
+      }
+      return `Compress ${count} PDFs to ${targetLabel}`;
+    }
+    if (count <= 1) {
+      return 'Compress PDF Now';
+    }
+    return `Compress ${count} PDFs Now`;
   };
 
   const addFilesToQueue = (files: FileList | File[]) => {
@@ -108,7 +167,8 @@ export const PdfCompressorTool: React.FC = () => {
           compressedBlob: null,
           compressedSize: 0,
           status: 'pending',
-          targetReached: null
+          targetReached: null,
+          targetBytes: getTargetSizeBytes()
         });
       }
     });
@@ -138,6 +198,10 @@ export const PdfCompressorTool: React.FC = () => {
 
   const removeFile = (id: string) => {
     setQueue((prev) => {
+      const itemToRemove = prev.find((item) => item.id === id);
+      if (itemToRemove?.previewUrl) {
+        URL.revokeObjectURL(itemToRemove.previewUrl);
+      }
       const next = prev.filter((item) => item.id !== id);
       if (activeFileId === id) {
         setActiveFileId(next.length > 0 ? next[0].id : null);
@@ -158,59 +222,45 @@ export const PdfCompressorTool: React.FC = () => {
     setPreviewItem(null);
   };
 
-  // Perform genuine PDF compression
+  // Perform genuine PDF compression via the progressive target-size engine
   const compressSingleFile = async (item: FileQueueItem): Promise<FileQueueItem> => {
+    // Revoke previous object URL if any
+    if (item.previewUrl) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
+
+    const currentTargetBytes = getTargetSizeBytes();
+
     try {
-      const buffer = await item.file.arrayBuffer();
-      // Load document with pdf-lib
-      const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
-      const pageCount = pdfDoc.getPageCount();
+      const result = await compressPdfWithEngine(
+        item.file,
+        currentTargetBytes,
+        compressionLevel,
+        {
+          stripMetadata,
+          removeAnnotations,
+          onProgress: (msg, percent) => {
+            setStatusMessage(`${item.name}: ${msg}`);
+            setProgressPercent(percent);
+          }
+        }
+      );
 
-      if (stripMetadata) {
-        pdfDoc.setTitle('');
-        pdfDoc.setAuthor('');
-        pdfDoc.setSubject('');
-        pdfDoc.setKeywords([]);
-        pdfDoc.setProducer('RajToolBox PDF Compressor');
-        pdfDoc.setCreator('RajToolBox.com');
-      }
-
-      const targetBytes = getTargetSizeBytes();
-
-      // Configure save options based on mode
-      const useStreams = true;
-      const objectsPerTick = compressionLevel === 'strong' || compressionLevel === 'target' ? 25 : 50;
-
-      // Save document with object stream compression
-      const compressedBytes = await pdfDoc.save({
-        useObjectStreams: useStreams,
-        addDefaultPage: false,
-        objectsPerTick
-      });
-
-      // Best effort size optimization
-      const rawBlob = new Blob([compressedBytes as unknown as BlobPart], { type: 'application/pdf' });
-      
-      // Compute optimized size
-      let finalBlob = rawBlob;
-      let finalSize = rawBlob.size;
-
-      // If compressed is somehow larger than original, keep original buffer stream
-      if (rawBlob.size >= item.file.size) {
-        finalBlob = new Blob([buffer], { type: 'application/pdf' });
-        finalSize = item.file.size;
-      }
-
-      const previewUrl = URL.createObjectURL(finalBlob);
-      const isTargetReached = targetBytes > 0 ? finalSize <= targetBytes : null;
+      // Verify and generate preview URL strictly for the compressed Blob
+      const previewUrl = URL.createObjectURL(result.compressedBlob);
 
       return {
         ...item,
-        compressedBlob: finalBlob,
-        compressedSize: finalSize,
+        compressedBlob: result.compressedBlob,
+        compressedSize: result.compressedSize,
         status: 'completed',
-        pageCount,
-        targetReached: isTargetReached,
+        pageCount: result.pageCount,
+        targetReached: result.targetReached,
+        targetBytes: currentTargetBytes,
+        hasDigitalSignature: result.analysis.hasDigitalSignature,
+        classification: result.analysis.classification,
+        statusExplanation: result.statusMessage,
+        passesRun: result.passesRun,
         previewUrl
       };
     } catch (err: any) {
@@ -226,8 +276,8 @@ export const PdfCompressorTool: React.FC = () => {
   const runCompression = async () => {
     if (queue.length === 0) return;
     setIsProcessingAll(true);
-    setProgressPercent(10);
-    setStatusMessage('Preparing documents for client-side compression...');
+    setProgressPercent(5);
+    setStatusMessage('Analyzing documents and preparing client-side engine...');
 
     const updatedQueue: FileQueueItem[] = [];
 
@@ -244,40 +294,52 @@ export const PdfCompressorTool: React.FC = () => {
     setStatusMessage('Compression complete!');
     showToast(`Successfully processed ${queue.length} document${queue.length > 1 ? 's' : ''}!`, 'success');
 
-    // Default preview the first completed file
+    // Auto-select the first completed item for results view
     const firstSuccess = updatedQueue.find((i) => i.status === 'completed');
     if (firstSuccess) {
       setActiveFileId(firstSuccess.id);
-      setPreviewItem(firstSuccess);
     }
   };
 
-  // Calculations across queue
+  // Calculations across entire queue from actual files
   const totalOriginalSize = queue.reduce((acc, curr) => acc + curr.originalSize, 0);
   const totalCompressedSize = queue.reduce((acc, curr) => acc + (curr.compressedSize || curr.originalSize), 0);
   const totalSavedBytes = Math.max(0, totalOriginalSize - totalCompressedSize);
   const overallReductionPercent =
-    totalOriginalSize > 0 ? Math.round((totalSavedBytes / totalOriginalSize) * 100) : 0;
+    totalOriginalSize > 0
+      ? parseFloat((((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(2))
+      : 0;
 
+  // Selected item in workbench
   const activeItem = queue.find((i) => i.id === activeFileId) || queue[0];
 
-  // Sharing handlers
-  const handleNativeShare = async (itemToShare?: FileQueueItem) => {
-    const shareData = {
-      title: 'Compressed PDF with RajToolBox',
-      text: `I compressed my PDF document with RajToolBox - fast, free, and 100% private in-browser!`,
-      url: window.location.href,
-    };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        showToast('Shared successfully!', 'success');
-      } catch {
-        // User dismissed
-      }
-    } else {
-      copyLink();
+  // Sharing actual compressed file where supported
+  const handleShareCompressedFile = async (item: FileQueueItem) => {
+    if (!item.compressedBlob) {
+      showToast('Document is not yet compressed.', 'info');
+      return;
     }
+
+    const compressedFileName = `compressed_${item.name}`;
+    const file = new File([item.compressedBlob], compressedFileName, { type: 'application/pdf' });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Compressed ${item.name}`,
+          text: `Compressed to ${formatSize(item.compressedSize)} with RajToolBox (100% private in-browser).`
+        });
+        showToast('Document shared successfully!', 'success');
+        return;
+      } catch {
+        // User cancelled share
+        return;
+      }
+    }
+
+    // Fallback: Copy link
+    copyLink();
   };
 
   const copyLink = () => {
@@ -312,13 +374,13 @@ export const PdfCompressorTool: React.FC = () => {
             Compress PDF Online
           </h2>
           <p className="text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA] max-w-md mx-auto mb-6 leading-relaxed">
-            Drag &amp; drop your PDF here, or click to choose from your device. Supports single or multiple documents with 100% private in-browser processing.
+            Drag &amp; drop your PDF here, or click to choose from your device. Specify a target size (40 KB, 100 KB, 200 KB, 1 MB or custom) with 100% private in-browser processing.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#EC4899] text-white font-bold text-sm shadow-md hover:bg-[#DB2777] transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#EC4899] text-white font-bold text-sm shadow-md hover:bg-[#DB2777] transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Choose PDF Documents</span>
@@ -332,16 +394,16 @@ export const PdfCompressorTool: React.FC = () => {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>
-              100% Client-Side
+              100% Client-Side Engine
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>
-              Bulk Queue Supported
+              Real Target Size Control
             </span>
           </div>
         </div>
       ) : (
-        /* 2. ACTIVE WORKBENCH: FILE LIST + COMPRESSION OPTIONS */
+        /* 2. ACTIVE WORKBENCH: FILE LIST + COMPRESSION CONTROLS */
         <div className="space-y-6">
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A]">
@@ -363,7 +425,7 @@ export const PdfCompressorTool: React.FC = () => {
               <button
                 type="button"
                 onClick={() => additionalFileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] transition-all shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] transition-all shadow-2xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-[#EC4899]" />
                 <span>+ Add More Files</span>
@@ -380,7 +442,7 @@ export const PdfCompressorTool: React.FC = () => {
               <button
                 type="button"
                 onClick={clearQueue}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#DC2626] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#DC2626] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear All</span>
@@ -389,11 +451,11 @@ export const PdfCompressorTool: React.FC = () => {
           </div>
 
           {/* Queue Item Cards */}
-          <div className="grid grid-cols-1 gap-2.5 max-h-64 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-2.5 max-h-72 overflow-y-auto pr-1">
             {queue.map((item) => {
               const reduction =
                 item.compressedSize > 0
-                  ? Math.max(0, Math.round(((item.originalSize - item.compressedSize) / item.originalSize) * 100))
+                  ? parseFloat((((item.originalSize - item.compressedSize) / item.originalSize) * 100).toFixed(1))
                   : 0;
 
               const isSelected = activeFileId === item.id;
@@ -414,7 +476,7 @@ export const PdfCompressorTool: React.FC = () => {
                       <p className="font-bold text-xs sm:text-sm text-[#18181B] dark:text-[#F4F4F5] truncate">
                         {item.name}
                       </p>
-                      <div className="flex items-center gap-2 text-[11px] text-[#71717A] mt-0.5">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#71717A] mt-0.5">
                         <span>Original: {formatSize(item.originalSize)}</span>
                         {item.status === 'completed' && (
                           <>
@@ -422,15 +484,15 @@ export const PdfCompressorTool: React.FC = () => {
                             <span className="font-bold text-[#16A34A] dark:text-[#4ADE80]">
                               {formatSize(item.compressedSize)} ({reduction}% saved)
                             </span>
-                            {item.targetReached !== null && (
+                            {item.targetBytes > 0 && (
                               <span
-                                className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                   item.targetReached
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                                 }`}
                               >
-                                {item.targetReached ? 'Target reached ✓' : 'Best effort'}
+                                {item.targetReached ? '✓ Target reached' : '⚠ Target not reached'}
                               </span>
                             )}
                           </>
@@ -443,6 +505,7 @@ export const PdfCompressorTool: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    {/* 👁️ WORKING VIEW / PREVIEW BUTTON */}
                     {item.status === 'completed' && item.previewUrl && (
                       <button
                         type="button"
@@ -450,19 +513,20 @@ export const PdfCompressorTool: React.FC = () => {
                           e.stopPropagation();
                           setPreviewItem(item);
                         }}
-                        className="p-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold hover:border-[#EC4899] text-[#71717A] hover:text-[#EC4899]"
-                        title="Preview PDF"
+                        className="p-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-bold hover:border-[#EC4899] bg-[#FFFDF7] dark:bg-[#202026] text-[#EC4899] hover:bg-[#FCE7F3] dark:hover:bg-[#EC4899]/20 transition-all cursor-pointer"
+                        title="View compressed PDF"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                     )}
 
+                    {/* Download Button */}
                     {item.status === 'completed' && item.previewUrl && (
                       <a
                         href={item.previewUrl}
                         download={`compressed_${item.name}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 rounded-lg bg-[#16A34A] text-white hover:bg-[#15803D]"
+                        className="p-2 rounded-xl bg-[#16A34A] text-white hover:bg-[#15803D] transition-all cursor-pointer"
                         title="Download compressed PDF"
                       >
                         <Download className="w-4 h-4" />
@@ -475,7 +539,7 @@ export const PdfCompressorTool: React.FC = () => {
                         e.stopPropagation();
                         removeFile(item.id);
                       }}
-                      className="p-1.5 rounded-lg text-[#71717A] hover:text-[#DC2626]"
+                      className="p-2 rounded-xl text-[#71717A] hover:text-[#DC2626] transition-all cursor-pointer"
                       title="Remove file"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -494,16 +558,16 @@ export const PdfCompressorTool: React.FC = () => {
                   <Sliders className="w-3.5 h-3.5 text-[#EC4899]" />
                   Select Compression Mode
                 </label>
-                <span className="text-[11px] text-[#71717A]">Content-dependent reduction</span>
+                <span className="text-[11px] text-[#71717A]">Multi-pass progressive engine</span>
               </div>
 
               {/* Mode Buttons */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {[
                   {
-                    id: 'basic' as CompressionLevel,
-                    title: 'Basic / Light',
-                    desc: 'Preserves vector art & high-res images for print'
+                    id: 'target' as CompressionLevel,
+                    title: 'Target Size',
+                    desc: 'Actively compress toward a specific KB or MB goal'
                   },
                   {
                     id: 'recommended' as CompressionLevel,
@@ -513,19 +577,19 @@ export const PdfCompressorTool: React.FC = () => {
                   {
                     id: 'strong' as CompressionLevel,
                     title: 'Strong',
-                    desc: 'Aggressive object compaction for strict limits'
+                    desc: 'Aggressive object & image compaction'
                   },
                   {
-                    id: 'target' as CompressionLevel,
-                    title: 'Target Size',
-                    desc: 'Compress toward a specific KB or MB goal'
+                    id: 'basic' as CompressionLevel,
+                    title: 'Basic / Light',
+                    desc: 'Preserves vector art & high-res images for print'
                   }
                 ].map((mode) => (
                   <button
                     key={mode.id}
                     type="button"
                     onClick={() => setCompressionLevel(mode.id)}
-                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                       compressionLevel === mode.id
                         ? 'border-[#EC4899] bg-[#FCE7F3]/40 dark:bg-[#EC4899]/15 shadow-2xs'
                         : 'border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899]/40 bg-[#FAFAFA] dark:bg-[#202026]'
@@ -547,13 +611,13 @@ export const PdfCompressorTool: React.FC = () => {
 
             {/* Target Size Presets (When Target Mode Active) */}
             {compressionLevel === 'target' && (
-              <div className="p-4 rounded-xl border border-[#FACC15]/40 bg-[#FFFDF7] dark:bg-[#1C1C22] space-y-3 animate-in fade-in">
+              <div className="p-5 rounded-2xl border border-[#FACC15]/50 bg-[#FFFDF7] dark:bg-[#1C1C22] space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#854D0E] dark:text-[#FACC15] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-4 h-4 text-[#FACC15]" />
                     Target Size Goal
                   </span>
-                  <span className="text-[11px] text-[#71717A]">Realistic best-effort compression</span>
+                  <span className="text-[11px] text-[#71717A]">Genuine multi-pass optimization</span>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -575,9 +639,9 @@ export const PdfCompressorTool: React.FC = () => {
                       key={preset.id}
                       type="button"
                       onClick={() => setTargetPreset(preset.id)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-all ${
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold text-center border transition-all cursor-pointer ${
                         targetPreset === preset.id
-                          ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] font-bold shadow-2xs'
+                          ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] shadow-2xs scale-[1.02]'
                           : 'border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-[#71717A] hover:border-[#854D0E]'
                       }`}
                     >
@@ -587,33 +651,34 @@ export const PdfCompressorTool: React.FC = () => {
                 </div>
 
                 {targetPreset === 'custom' && (
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
                     <input
                       type="number"
-                      min="5"
-                      max="1000"
+                      min="1"
+                      step="any"
                       value={customTargetValue}
-                      onChange={(e) => setCustomTargetValue(Math.max(1, Number(e.target.value)))}
-                      className="w-28 px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-bold"
+                      onChange={(e) => setCustomTargetValue(Math.max(0.1, parseFloat(e.target.value) || 1))}
+                      className="w-28 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-bold text-[#18181B] dark:text-[#F4F4F5]"
+                      placeholder="e.g. 750"
                     />
                     <select
                       value={customTargetUnit}
                       onChange={(e) => setCustomTargetUnit(e.target.value as 'KB' | 'MB')}
-                      className="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold"
+                      className="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-bold text-[#18181B] dark:text-[#F4F4F5] cursor-pointer"
                     >
                       <option value="KB">KB</option>
                       <option value="MB">MB</option>
                     </select>
-                    <span className="text-xs text-[#71717A]">
-                      Target size: {customTargetValue} {customTargetUnit}
+                    <span className="text-xs font-semibold text-[#854D0E] dark:text-[#FACC15]">
+                      Active Goal: {customTargetValue} {customTargetUnit} ({formatSize(getTargetSizeBytes())})
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-start gap-2 text-[11px] text-[#854D0E] dark:text-[#FACC15] bg-[#FEF3C7]/40 dark:bg-[#FACC15]/10 p-2.5 rounded-lg">
+                <div className="flex items-start gap-2 text-[11px] text-[#854D0E] dark:text-[#FACC15] bg-[#FEF3C7]/60 dark:bg-[#FACC15]/10 p-3 rounded-xl">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
-                    <strong>Honest Note:</strong> Documents with dozens of scanned color pages or dense embedded fonts may not reach ultra-small targets without severe readability loss. The tool will preserve document legibility.
+                    <strong>Honest Quality Guard:</strong> The target is an active goal. The engine runs up to 4 progressive optimization passes. If a document reaches its safe readability limit without reaching an ultra-small target, it honestly shows the best achievable size without destroying legibility.
                   </p>
                 </div>
               </div>
@@ -642,7 +707,7 @@ export const PdfCompressorTool: React.FC = () => {
               </label>
             </div>
 
-            {/* Primary Action Button */}
+            {/* DYNAMIC COMPRESSION ACTION BUTTON */}
             <div className="pt-2">
               <button
                 type="button"
@@ -658,7 +723,7 @@ export const PdfCompressorTool: React.FC = () => {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Compress {queue.length} PDF{queue.length > 1 ? 's' : ''} Now</span>
+                    <span>{getCompressButtonLabel()}</span>
                   </>
                 )}
               </button>
@@ -668,138 +733,305 @@ export const PdfCompressorTool: React.FC = () => {
             </div>
           </div>
 
-          {/* 4. OVERALL RESULTS & BEFORE/AFTER COMPARISON */}
-          {queue.some((i) => i.status === 'completed') && (
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#18181B] border border-[#16A34A]/30 shadow-xs space-y-6 animate-in fade-in">
+          {/* 4. RESULT CARD (MEASURED FROM ACTUAL OUTPUT BLOB) */}
+          {activeItem && activeItem.status === 'completed' && activeItem.compressedBlob && (
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#18181B] border border-[#16A34A]/40 shadow-sm space-y-6 animate-in fade-in">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7] dark:border-[#27272A]">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 mb-1">
-                    <Check className="w-3.5 h-3.5" />
-                    Compression Complete
-                  </span>
-                  <h3 className="text-base sm:text-lg font-black text-[#18181B] dark:text-[#F4F4F5]">
-                    Total Reduction: {overallReductionPercent}% Saved
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <Check className="w-3.5 h-3.5" />
+                      Compression Complete
+                    </span>
+
+                    {activeItem.targetBytes > 0 && (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                          activeItem.targetReached
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                        }`}
+                      >
+                        {activeItem.targetReached ? '✓ Target reached' : '⚠ Target not reached'}
+                      </span>
+                    )}
+
+                    {activeItem.hasDigitalSignature && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Signature Warning
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-[#18181B] dark:text-[#F4F4F5] truncate max-w-md">
+                    {activeItem.name}
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => handleNativeShare()}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899] transition-all"
+                    onClick={() => handleShareCompressedFile(activeItem)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899] transition-all cursor-pointer"
                   >
                     <Share2 className="w-3.5 h-3.5 text-[#EC4899]" />
-                    <span>Share Results</span>
+                    <span>Share File</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={runCompression}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899] transition-all"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899] transition-all cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Re-compress</span>
+                    <span>Compress Again</span>
                   </button>
                 </div>
               </div>
 
-              {/* Statistics Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-[#FAFAFA] dark:bg-[#202026] text-center">
-                  <p className="text-xs text-[#71717A] mb-1">Original Size</p>
-                  <p className="text-lg font-black text-[#18181B] dark:text-[#F4F4F5]">{formatSize(totalOriginalSize)}</p>
+              {/* Exact Physical File Size Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="p-3.5 rounded-2xl bg-[#FAFAFA] dark:bg-[#202026] text-center border border-[#E4E4E7]/60 dark:border-[#27272A]">
+                  <p className="text-[11px] text-[#71717A] mb-1 font-semibold uppercase tracking-wider">Original Size</p>
+                  <p className="text-base font-black text-[#18181B] dark:text-[#F4F4F5]">{formatSize(activeItem.originalSize)}</p>
                 </div>
-                <div className="p-4 rounded-xl bg-[#FAFAFA] dark:bg-[#202026] text-center">
-                  <p className="text-xs text-[#71717A] mb-1">Compressed Size</p>
-                  <p className="text-lg font-black text-[#16A34A] dark:text-[#4ADE80]">{formatSize(totalCompressedSize)}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-[#FAFAFA] dark:bg-[#202026] text-center">
-                  <p className="text-xs text-[#71717A] mb-1">Space Saved</p>
-                  <p className="text-lg font-black text-[#EC4899]">{formatSize(totalSavedBytes)}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-[#FAFAFA] dark:bg-[#202026] text-center">
-                  <p className="text-xs text-[#71717A] mb-1">Avg. Reduction</p>
-                  <p className="text-lg font-black text-[#854D0E] dark:text-[#FACC15]">{overallReductionPercent}%</p>
-                </div>
-              </div>
 
-              {/* Individual Completed Downloads */}
-              <div className="space-y-3 pt-2">
-                <p className="text-xs font-bold text-[#71717A] uppercase tracking-wider">
-                  Download Compressed Documents:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {queue
-                    .filter((i) => i.status === 'completed' && i.previewUrl)
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#18181B] flex items-center justify-between gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-bold text-xs truncate text-[#18181B] dark:text-[#F4F4F5]">{item.name}</p>
-                          <p className="text-[11px] text-[#71717A]">
-                            {formatSize(item.originalSize)} &rarr;{' '}
-                            <span className="font-bold text-[#16A34A]">{formatSize(item.compressedSize)}</span>
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setPreviewItem(item)}
-                            className="p-2 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] hover:text-[#EC4899]"
-                            title="Preview PDF"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <a
-                            href={item.previewUrl!}
-                            download={`compressed_${item.name}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] transition-all"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Download</span>
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* 5. LIVE PDF PREVIEW MODAL / EMBED */}
-              {previewItem && previewItem.previewUrl && (
-                <div className="mt-6 pt-6 border-t border-[#E4E4E7] dark:border-[#27272A] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-[#EC4899]" />
-                      Real In-Browser Preview: {previewItem.name}
-                    </h4>
-                    <a
-                      href={previewItem.previewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#EC4899] font-semibold hover:underline inline-flex items-center gap-1"
-                    >
-                      <span>Open in New Tab</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                {activeItem.targetBytes > 0 && (
+                  <div className="p-3.5 rounded-2xl bg-[#FFFDF7] dark:bg-[#202026] text-center border border-[#FACC15]/40">
+                    <p className="text-[11px] text-[#854D0E] dark:text-[#FACC15] mb-1 font-semibold uppercase tracking-wider">Target Goal</p>
+                    <p className="text-base font-black text-[#854D0E] dark:text-[#FACC15]">{formatSize(activeItem.targetBytes)}</p>
                   </div>
+                )}
 
-                  <div className="w-full h-96 sm:h-[450px] rounded-xl overflow-hidden border border-[#E4E4E7] dark:border-[#27272A] bg-zinc-100 dark:bg-zinc-900">
-                    <iframe
-                      src={previewItem.previewUrl}
-                      title={`Preview of ${previewItem.name}`}
-                      className="w-full h-full"
-                    />
+                <div className="p-3.5 rounded-2xl bg-[#FAFAFA] dark:bg-[#202026] text-center border border-[#16A34A]/40">
+                  <p className="text-[11px] text-[#16A34A] dark:text-[#4ADE80] mb-1 font-semibold uppercase tracking-wider">Compressed Size</p>
+                  <p className="text-base font-black text-[#16A34A] dark:text-[#4ADE80]">{formatSize(activeItem.compressedSize)}</p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#FAFAFA] dark:bg-[#202026] text-center border border-[#E4E4E7]/60 dark:border-[#27272A]">
+                  <p className="text-[11px] text-[#EC4899] mb-1 font-semibold uppercase tracking-wider">Bytes Saved</p>
+                  <p className="text-base font-black text-[#EC4899]">
+                    {formatSize(Math.max(0, activeItem.originalSize - activeItem.compressedSize))}
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#FAFAFA] dark:bg-[#202026] text-center border border-[#E4E4E7]/60 dark:border-[#27272A] col-span-2 sm:col-span-1">
+                  <p className="text-[11px] text-[#71717A] mb-1 font-semibold uppercase tracking-wider">Reduction</p>
+                  <p className="text-base font-black text-[#854D0E] dark:text-[#FACC15]">
+                    {activeItem.originalSize > 0
+                      ? (((activeItem.originalSize - activeItem.compressedSize) / activeItem.originalSize) * 100).toFixed(2)
+                      : 0}
+                    %
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Explanation / Quality Feedback */}
+              {activeItem.statusExplanation && (
+                <div
+                  className={`p-3.5 rounded-2xl text-xs flex items-start gap-2.5 ${
+                    activeItem.targetReached
+                      ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
+                      : activeItem.targetBytes > 0
+                      ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                      : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800'
+                  }`}
+                >
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">{activeItem.statusExplanation}</p>
+                    {activeItem.hasDigitalSignature && (
+                      <p className="mt-1 text-rose-700 dark:text-rose-400 font-semibold">
+                        Notice: This document contains a digital signature. Recompressing streams invalidates cryptographic signature hashes.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
+
+              {/* Action Buttons: 👁️ Preview + ⬇ Download + Share */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewItem(activeItem)}
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-[#EC4899] text-[#EC4899] hover:bg-[#FCE7F3]/40 dark:hover:bg-[#EC4899]/15 font-bold text-sm transition-all cursor-pointer shadow-xs"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>View Compressed PDF</span>
+                </button>
+
+                <a
+                  href={activeItem.previewUrl}
+                  download={`compressed_${activeItem.name}`}
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-[#16A34A] text-white hover:bg-[#15803D] font-bold text-sm transition-all cursor-pointer shadow-md"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download PDF ({formatSize(activeItem.compressedSize)})</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleShareCompressedFile(activeItem)}
+                  className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] font-semibold text-sm transition-all cursor-pointer"
+                  title="Share compressed file"
+                >
+                  <Share2 className="w-4 h-4 text-[#EC4899]" />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Overall Bulk Summary (if multiple files completed) */}
+          {queue.length > 1 && queue.some((i) => i.status === 'completed') && (
+            <div className="p-5 rounded-2xl bg-[#FFFDF7] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold text-[#71717A] uppercase tracking-wider">Queue Total</p>
+                <p className="text-sm font-black text-[#18181B] dark:text-[#F4F4F5]">
+                  {formatSize(totalOriginalSize)} &rarr; {formatSize(totalCompressedSize)} ({overallReductionPercent}% saved across all files)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={runCompression}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EC4899] text-white font-bold text-xs shadow-xs hover:bg-[#DB2777] cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Re-compress All</span>
+              </button>
             </div>
           )}
         </div>
       )}
 
-      {/* QUICK SHARING SHORTCUTS */}
+      {/* 5. DEDICATED PREMIUM FULL PDF PREVIEW MODAL */}
+      {previewItem && previewItem.previewUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setPreviewItem(null)}
+        >
+          <div
+            className="w-full max-w-5xl h-[92vh] bg-white dark:bg-[#18181B] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#E4E4E7] dark:border-[#27272A]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-3 bg-[#FFFDF7] dark:bg-[#202026]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899] flex items-center justify-center shrink-0">
+                  <Eye className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm sm:text-base font-black text-[#18181B] dark:text-[#F4F4F5] truncate">
+                    Preview: {previewItem.name}
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-[#71717A] mt-0.5">
+                    <span>Compressed: <strong className="text-[#16A34A]">{formatSize(previewItem.compressedSize)}</strong></span>
+                    {previewItem.targetBytes > 0 && (
+                      <span>· Goal: <strong>{formatSize(previewItem.targetBytes)}</strong></span>
+                    )}
+                    <span>· Saved: <strong className="text-[#EC4899]">
+                      {previewItem.originalSize > 0
+                        ? (((previewItem.originalSize - previewItem.compressedSize) / previewItem.originalSize) * 100).toFixed(1)
+                        : 0}%
+                    </strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={previewItem.previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] transition-all"
+                  title="Open in new window"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>New Window</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewItem(null)}
+                  className="p-2 rounded-xl text-[#71717A] hover:text-[#18181B] dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
+                  title="Close preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Actual Generated PDF Preview */}
+            <div className="flex-1 bg-zinc-100 dark:bg-zinc-900 relative overflow-hidden flex flex-col items-center justify-center">
+              <object
+                data={previewItem.previewUrl}
+                type="application/pdf"
+                className="w-full h-full"
+              >
+                <iframe
+                  src={previewItem.previewUrl}
+                  title={`Preview of compressed ${previewItem.name}`}
+                  className="w-full h-full border-0"
+                >
+                  {/* Fallback if browser PDF rendering is unavailable */}
+                  <div className="p-8 text-center max-w-md mx-auto space-y-4">
+                    <FileText className="w-12 h-12 text-[#71717A] mx-auto" />
+                    <p className="text-sm font-semibold text-[#18181B] dark:text-[#F4F4F5]">
+                      Preview is unavailable in this browser. You can still download the compressed PDF.
+                    </p>
+                    <a
+                      href={previewItem.previewUrl}
+                      download={`compressed_${previewItem.name}`}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] text-white font-bold text-xs shadow-md"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download PDF ({formatSize(previewItem.compressedSize)})</span>
+                    </a>
+                  </div>
+                </iframe>
+              </object>
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div className="p-3 sm:p-4 border-t border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#202026] flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-[#71717A]">
+                Showing actual generated output blob ({formatSize(previewItem.compressedSize)})
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleShareCompressedFile(previewItem)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-[#EC4899]" />
+                  <span>Share</span>
+                </button>
+
+                <a
+                  href={previewItem.previewUrl}
+                  download={`compressed_${previewItem.name}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] shadow-sm transition-all cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewItem(null)}
+                  className="px-3.5 py-2 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold text-[#71717A] hover:text-[#18181B] dark:hover:text-white cursor-pointer"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK SHARING & BOOKMARK BAR */}
       <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-4 text-xs">
         <div className="flex items-center gap-2 text-[#71717A] dark:text-[#A1A1AA]">
           <Share2 className="w-4 h-4 text-[#EC4899]" />
@@ -842,7 +1074,7 @@ export const PdfCompressorTool: React.FC = () => {
           <button
             type="button"
             onClick={copyLink}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] font-semibold"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] font-semibold cursor-pointer"
           >
             {linkCopied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{linkCopied ? 'Copied!' : 'Copy Link'}</span>
