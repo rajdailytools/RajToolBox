@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { TOOLS_REGISTRY } from '../src/data/tools.ts';
 import { CATEGORIES, CATEGORIES_LIST } from '../src/data/categories.ts';
 import { GUIDES_REGISTRY } from '../src/data/guides.ts';
-import { ToolItem, CategoryInfo } from '../src/types/index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +13,11 @@ const PUBLIC_DIR = path.resolve(ROOT_DIR, 'public');
 
 // Base URL: Strictly non-www HTTPS
 const BASE_URL = 'https://rajtoolbox.com';
+
+export type AssetManifest = {
+  scripts: string[];
+  styles: string[];
+};
 
 function escapeHtml(str: string): string {
   return str
@@ -31,11 +35,7 @@ function ensureDir(dirPath: string) {
 }
 
 // Extract bundles and assets from dist/index.html
-function getViteAssets(): {
-  scripts: string[];
-  styles: string[];
-  headTags: string;
-} {
+function getViteAssets(): AssetManifest {
   const indexHtmlPath = path.join(DIST_DIR, 'index.html');
   if (!fs.existsSync(indexHtmlPath)) {
     throw new Error('dist/index.html not found! Please run vite build first.');
@@ -50,15 +50,7 @@ function getViteAssets(): {
 
   return {
     scripts: scriptMatches,
-    styles: styleMatches,
-    headTags: `
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    ${styleMatches.join('\n    ')}
-    ${scriptMatches.join('\n    ')}
-    `
+    styles: styleMatches
   };
 }
 
@@ -160,7 +152,7 @@ function renderFooter(): string {
             <li><a href="/text-tools/" class="hover:text-[#EC4899] transition-colors">Text Tools</a></li>
             <li><a href="/developer-tools/" class="hover:text-[#EC4899] transition-colors">Developer Tools</a></li>
             <li><a href="/converters/" class="hover:text-[#EC4899] transition-colors">Converters</a></li>
-            <li><a href="/finance-calculators/" class="hover:text-[#EC4899] transition-colors">Finance & Calculators</a></li>
+            <li><a href="/finance-calculators/" class="hover:text-[#EC4899] transition-colors">Finance &amp; Calculators</a></li>
           </ul>
         </div>
 
@@ -183,12 +175,12 @@ function renderFooter(): string {
         <!-- Platform & Legal -->
         <div>
           <h4 class="text-xs font-bold uppercase tracking-wider text-[#18181B] dark:text-white mb-3">
-            Platform & Legal
+            Platform &amp; Legal
           </h4>
           <ul class="space-y-2 text-xs text-[#71717A] dark:text-[#A1A1AA]">
             <li><a href="/about/" class="hover:text-[#EC4899] transition-colors">About RajToolBox</a></li>
             <li><a href="/contact/" class="hover:text-[#EC4899] transition-colors">Contact Us</a></li>
-            <li><a href="/guides/" class="hover:text-[#EC4899] transition-colors">Tutorials & Guides</a></li>
+            <li><a href="/guides/" class="hover:text-[#EC4899] transition-colors">Tutorials &amp; Guides</a></li>
             <li><a href="/privacy-policy/" class="hover:text-[#EC4899] transition-colors">Privacy Policy</a></li>
             <li><a href="/terms-and-conditions/" class="hover:text-[#EC4899] transition-colors">Terms of Service</a></li>
             <li><a href="/disclaimer/" class="hover:text-[#EC4899] transition-colors">Disclaimer</a></li>
@@ -223,7 +215,7 @@ function buildFullHtml({
   keywords: string;
   jsonLd: object[];
   bodyContent: string;
-  headAssets: { headTags: string };
+  headAssets: AssetManifest;
 }): string {
   const scriptsLd = jsonLd
     .map((obj) => `<script type="application/ld+json">\n${JSON.stringify(obj, null, 2)}\n</script>`)
@@ -255,7 +247,11 @@ function buildFullHtml({
     <!-- Structured Data (JSON-LD) -->
     ${scriptsLd}
 
-    ${headAssets.headTags}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    ${headAssets.styles.join('\n    ')}
   </head>
   <body class="bg-[#FFFDF7] text-[#18181B] antialiased selection:bg-[#EC4899] selection:text-white min-h-screen">
     <div id="root">
@@ -267,12 +263,197 @@ function buildFullHtml({
         ${renderFooter()}
       </div>
     </div>
+    ${headAssets.scripts.join('\n    ')}
   </body>
 </html>`;
 }
 
+// 0. GENERATE HOMEPAGE (dist/index.html)
+function generateHomePage(headAssets: AssetManifest): string {
+  const title = 'RajToolBox – Powerful Online Tools. Simple to Use.';
+  const description =
+    'Free, fast, and secure browser-based tools for everyday work: PDF tools, image editors, text manipulation, developer utilities, unit converters, QR codes, and SEO generators.';
+  const canonicalUrl = `${BASE_URL}/`;
+  const keywords = 'online tools, pdf merger, image compressor, json formatter, qr code generator, unit converter, word counter, free web utilities';
+
+  const jsonLd: object[] = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'RajToolBox',
+      url: canonicalUrl,
+      description,
+      applicationCategory: 'UtilitiesApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript. Requires HTML5.',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      },
+      creator: {
+        '@type': 'Person',
+        name: 'Raj Singh Sengar',
+        jobTitle: 'Creator & Full-Stack Developer',
+        alumniOf: 'B.Sc. Physics'
+      }
+    }
+  ];
+
+  // Categories Grid
+  const categoriesGridHtml = CATEGORIES_LIST.map((cat) => {
+    const tools = TOOLS_REGISTRY.filter((t) => t.category === cat.id);
+    return `
+    <a href="/${cat.slug}/" class="p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#EC4899]">${escapeHtml(cat.shortName || cat.name)}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-[#FFFDF7] dark:bg-[#202026] text-[#71717A] font-semibold border border-[#E4E4E7] dark:border-[#27272A]">${tools.length} Tools</span>
+        </div>
+        <h3 class="text-base font-bold text-[#18181B] dark:text-[#F4F4F5] group-hover:text-[#EC4899] transition-colors">${escapeHtml(cat.name)}</h3>
+        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1.5 leading-relaxed line-clamp-2">${escapeHtml(cat.description)}</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-[#F4F4F5] dark:border-[#202026] flex items-center justify-between text-xs text-[#EC4899] font-bold">
+        <span>Explore Category</span>
+        <span>&rarr;</span>
+      </div>
+    </a>`;
+  }).join('\n');
+
+  // Popular Tools Grid
+  const popularToolsHtml = TOOLS_REGISTRY.filter((t) => t.popular).slice(0, 9).map((tool) => `
+    <a href="/tools/${tool.slug}/" class="p-5 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#EC4899]">${escapeHtml(tool.category)}</span>
+          <span class="text-[10px] font-semibold text-[#16A34A] dark:text-[#4ADE80]">Free &middot; Client Side</span>
+        </div>
+        <h4 class="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] group-hover:text-[#EC4899] transition-colors">${escapeHtml(tool.name)}</h4>
+        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1 line-clamp-2">${escapeHtml(tool.shortDescription)}</p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-[#F4F4F5] dark:border-[#202026] text-xs font-bold text-[#EC4899] flex items-center justify-between">
+        <span>Open Tool</span>
+        <span>&rarr;</span>
+      </div>
+    </a>
+  `).join('\n');
+
+  const bodyContent = `
+  <div class="space-y-16 sm:space-y-24 pb-12">
+    <!-- HERO SECTION -->
+    <section class="relative pt-12 sm:pt-20 pb-16 border-b border-[#E4E4E7] dark:border-[#27272A] bg-gradient-to-b from-[#FFFDF7] to-white dark:from-[#0F0F12] dark:to-[#141418]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p class="text-xs uppercase tracking-widest font-bold text-[#EC4899] mb-3">
+          Client-Side Browser Utilities
+        </p>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-[#18181B] dark:text-[#F4F4F5] tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none">
+          Powerful Online Tools. <br />
+          <span class="text-[#EC4899]">Simple to Use.</span>
+        </h1>
+        <p class="text-sm sm:text-base text-[#71717A] dark:text-[#A1A1AA] max-w-2xl mx-auto mt-4 leading-relaxed">
+          Free, fast, and privacy-focused digital tools created to simplify everyday tasks. All file conversions, formatting, and mathematical calculations run securely inside your browser.
+        </p>
+
+        <!-- Search Bar Placeholder -->
+        <div class="mt-8 max-w-xl mx-auto">
+          <a href="/tools/" class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-sm hover:border-[#EC4899] text-left text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA]">
+            <span>Search 50+ tools (e.g., PDF Merger, Image Compressor, Age Calculator)...</span>
+            <span class="px-2.5 py-1 rounded-lg bg-[#F4F4F5] dark:bg-[#202026] text-[11px] font-bold text-[#18181B] dark:text-white">Browse</span>
+          </a>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+          <a href="/pdf-tools/" class="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899]">PDF Tools</a>
+          <a href="/image-tools/" class="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899]">Image Tools</a>
+          <a href="/developer-tools/" class="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899]">Developer Tools</a>
+          <a href="/converters/" class="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899]">Converters</a>
+          <a href="/finance-calculators/" class="px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-semibold hover:border-[#EC4899]">Finance &amp; Calculators</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- POPULAR TOOLS SECTION -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <span class="text-xs uppercase tracking-widest font-bold text-[#EC4899] block mb-1">Most Utilized</span>
+          <h2 class="text-2xl font-black text-[#18181B] dark:text-[#F4F4F5]">Popular Online Tools</h2>
+        </div>
+        <a href="/tools/" class="text-xs font-bold text-[#EC4899] hover:underline">View All Tools &rarr;</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        ${popularToolsHtml}
+      </div>
+    </section>
+
+    <!-- ALL 16 CATEGORIES SECTION -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <span class="text-xs uppercase tracking-widest font-bold text-[#EC4899] block mb-1">Organized Directory</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-[#18181B] dark:text-[#F4F4F5]">Browse by Category</h2>
+        <p class="text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA] mt-2">16 complete categories with at least 2 functional, browser-native tools each.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        ${categoriesGridHtml}
+      </div>
+    </section>
+
+    <!-- TRUST & PRIVACY PILLARS -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] rounded-3xl p-8 sm:p-12 shadow-xs">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="text-xs uppercase tracking-widest font-bold text-[#EC4899] block mb-1">Privacy Architecture</span>
+          <h2 class="text-2xl sm:text-3xl font-black text-[#18181B] dark:text-[#F4F4F5]">Why Choose RajToolBox?</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center sm:text-left">
+          <div class="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#141416] border border-[#FACC15]/40">
+            <h3 class="text-base font-bold text-[#18181B] dark:text-[#F4F4F5] mb-2">100% In-Browser &amp; Private</h3>
+            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] leading-relaxed">Your files, photos, passwords, and data never leave your computer. Everything processes locally via HTML5, Canvas, and WebAssembly.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#141416] border border-[#FACC15]/40">
+            <h3 class="text-base font-bold text-[#18181B] dark:text-[#F4F4F5] mb-2">Physics &amp; Mathematical Rigor</h3>
+            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] leading-relaxed">Built by Raj Singh Sengar (B.Sc. Physics). Every calculation, loan formula, and converter constant is verified against exact standard formulas.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-[#FFFDF7] dark:bg-[#141416] border border-[#FACC15]/40">
+            <h3 class="text-base font-bold text-[#18181B] dark:text-[#F4F4F5] mb-2">Zero Paywalls &amp; Instant</h3>
+            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] leading-relaxed">No signups, no subscriptions, no fake countdowns, and no deceptive download buttons. Fast results ready in seconds.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CREATOR BOX -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="p-8 rounded-3xl bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] shadow-xs flex flex-col sm:flex-row items-center gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-[#EC4899] text-white flex items-center justify-center font-bold text-xl shrink-0">RS</div>
+        <div>
+          <h3 class="text-lg font-bold text-[#18181B] dark:text-[#F4F4F5]">Raj Singh Sengar</h3>
+          <span class="text-xs text-[#EC4899] font-semibold">B.Sc. Physics &middot; Creator of RajToolBox</span>
+          <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-2 leading-relaxed">
+            "I created RajToolBox to provide honest, fast, and completely free online utilities. When you need to compress an image, merge PDF contracts, format JSON, or compute financial payments, you shouldn't have to upload your private files to unknown servers."
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>`;
+
+  const html = buildFullHtml({
+    title,
+    description,
+    canonicalUrl,
+    keywords,
+    jsonLd,
+    bodyContent,
+    headAssets
+  });
+
+  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), html, 'utf8');
+  return '/';
+}
+
 // 1. GENERATE TOOL PAGES
-function generateToolPages(headAssets: { headTags: string }): string[] {
+function generateToolPages(headAssets: AssetManifest): string[] {
   const generatedRoutes: string[] = [];
 
   for (const tool of TOOLS_REGISTRY) {
@@ -581,7 +762,7 @@ function generateToolPages(headAssets: { headTags: string }): string[] {
 }
 
 // 2. GENERATE CATEGORY PAGES
-function generateCategoryPages(headAssets: { headTags: string }): string[] {
+function generateCategoryPages(headAssets: AssetManifest): string[] {
   const generatedRoutes: string[] = [];
 
   for (const cat of CATEGORIES_LIST) {
@@ -717,7 +898,7 @@ function generateCategoryPages(headAssets: { headTags: string }): string[] {
 }
 
 // 3. GENERATE ALL TOOLS PAGE
-function generateAllToolsPage(headAssets: { headTags: string }): string {
+function generateAllToolsPage(headAssets: AssetManifest): string {
   const title = `All Online Tools – Free Browser Utilities | RajToolBox`;
   const description = `Explore all ${TOOLS_REGISTRY.length} free, fast, and secure online tools across ${CATEGORIES_LIST.length} categories on RajToolBox. High-speed local browser processing.`;
   const canonicalUrl = `${BASE_URL}/tools/`;
@@ -795,7 +976,7 @@ function generateAllToolsPage(headAssets: { headTags: string }): string {
 }
 
 // 4. GENERATE STATIC PAGES (About, Contact, Guides, Privacy, Terms, Disclaimer, Copyright, Ads)
-function generateStaticPages(headAssets: { headTags: string }): string[] {
+function generateStaticPages(headAssets: AssetManifest): string[] {
   const staticPages = [
     {
       slug: 'about',
@@ -1036,7 +1217,7 @@ function generateStaticPages(headAssets: { headTags: string }): string[] {
 }
 
 // 5. GENERATE 404 PAGE (dist/404.html)
-function generate404Page(headAssets: { headTags: string }) {
+function generate404Page(headAssets: AssetManifest) {
   const title = `404 – Page Not Found | RajToolBox`;
   const description = `The tool or page you requested could not be found on RajToolBox. Explore 50+ free online tools for PDF, images, text, and calculations.`;
   const canonicalUrl = `${BASE_URL}/404.html`;
@@ -1140,7 +1321,12 @@ function main() {
   console.log('[Assets] Found Vite bundled scripts and styles.');
 
   // Collect all generated routes
-  const allRoutes: string[] = ['/'];
+  const allRoutes: string[] = [];
+
+  // 0. Homepage (dist/index.html)
+  const homeRoute = generateHomePage(headAssets);
+  allRoutes.push(homeRoute);
+  console.log(`[Homepage] Pre-rendered SEO content into dist/index.html`);
 
   // 1. Tool Pages
   const toolRoutes = generateToolPages(headAssets);

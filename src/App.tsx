@@ -94,13 +94,55 @@ const MainRouter: React.FC = () => {
   return <NotFoundPage />;
 };
 
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('RajToolBox Caught Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="max-w-xl mx-auto px-4 py-16 text-center">
+          <h2 className="text-xl font-bold text-[#18181B] dark:text-[#F4F4F5] mb-2">Something went wrong</h2>
+          <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mb-4">We encountered an unexpected error while initializing the interface.</p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="px-4 py-2 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777]"
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
     <AppProvider>
       <div className="flex flex-col min-h-screen bg-[#FFFDF7] dark:bg-[#0F0F12] text-[#18181B] dark:text-[#F4F4F5]">
         <Header />
         <main className="flex-1">
-          <MainRouter />
+          <ErrorBoundary>
+            <MainRouter />
+          </ErrorBoundary>
         </main>
         <Footer />
         <SearchModal />

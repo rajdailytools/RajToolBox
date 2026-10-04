@@ -18,26 +18,67 @@ interface AppContextType {
   navigate: (path: string) => void;
 }
 
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch {
+      // Sandbox fallback
+    }
+    return null;
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch {
+      // Sandbox fallback
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch {
+      // Sandbox fallback
+    }
+  }
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Dark mode
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('rajtoolbox_dark');
+      const saved = safeStorage.getItem('rajtoolbox_dark');
       if (saved !== null) return saved === 'true';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      try {
+        if (window.matchMedia) {
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+      } catch {
+        return false;
+      }
     }
     return false;
   });
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('rajtoolbox_dark', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('rajtoolbox_dark', 'false');
+    try {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        safeStorage.setItem('rajtoolbox_dark', 'true');
+      } else {
+        document.documentElement.classList.remove('dark');
+        safeStorage.setItem('rajtoolbox_dark', 'false');
+      }
+    } catch {
+      // Ignore
     }
   }, [isDarkMode]);
 
@@ -64,7 +105,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Favorites
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('rajtoolbox_favorites');
+      const saved = safeStorage.getItem('rajtoolbox_favorites');
       return saved ? JSON.parse(saved) : ['pdf-merger', 'image-compressor', 'percentage-calculator', 'qr-code-generator'];
     } catch {
       return ['pdf-merger', 'image-compressor'];
@@ -74,11 +115,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const toggleFavorite = (slug: string) => {
     setFavorites((prev) => {
       const updated = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
-      try {
-        localStorage.setItem('rajtoolbox_favorites', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
+      safeStorage.setItem('rajtoolbox_favorites', JSON.stringify(updated));
       return updated;
     });
   };
@@ -88,7 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Recently used
   const [recentlyUsed, setRecentlyUsed] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('rajtoolbox_recent');
+      const saved = safeStorage.getItem('rajtoolbox_recent');
       return saved ? JSON.parse(saved) : ['word-counter', 'json-formatter', 'universal-unit-converter'];
     } catch {
       return [];
@@ -99,22 +136,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setRecentlyUsed((prev) => {
       const filtered = prev.filter((s) => s !== slug);
       const updated = [slug, ...filtered].slice(0, 10);
-      try {
-        localStorage.setItem('rajtoolbox_recent', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
+      safeStorage.setItem('rajtoolbox_recent', JSON.stringify(updated));
       return updated;
     });
   };
 
   const clearRecentlyUsed = () => {
     setRecentlyUsed([]);
-    try {
-      localStorage.removeItem('rajtoolbox_recent');
-    } catch (e) {
-      console.error(e);
-    }
+    safeStorage.removeItem('rajtoolbox_recent');
   };
 
   // Toast system
