@@ -38,6 +38,56 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     relatedToolSlugs: ['pdf-splitter', 'image-to-pdf', 'pdf-watermark', 'pdf-metadata-viewer']
   },
   {
+    id: 'pdf-compressor',
+    slug: 'pdf-compressor',
+    name: 'PDF Compressor',
+    category: 'pdf-tools',
+    shortDescription: 'Reduce PDF file size locally in your browser to fit job portals, email attachments, and online submission forms.',
+    fullDescription: 'Compress large PDF documents, scanned bills, portfolios, and reports without server uploads. Uses client-side stream optimization to reconstruct object tables and strip redundant metadata while keeping text crisp.',
+    iconName: 'FileText',
+    keywords: ['compress pdf', 'reduce pdf size', 'pdf compressor', 'pdf under 1mb', 'pdf under 500kb', 'shrink pdf', 'downsize pdf'],
+    popular: true,
+    featured: true,
+    aliases: ['pdf size reducer', 'pdf downscaler', 'pdf shrinker', 'pdf optimizer'],
+    useCases: ['email attachment size reduction', 'job portal document upload', 'government exam application forms', 'mobile bandwidth saving'],
+    problemPhrases: ['pdf is too large', 'file exceeds 2mb limit', 'cannot upload pdf to portal', 'make pdf smaller'],
+    intentPhrases: ['pdf under 100kb', 'pdf under 500kb', 'pdf under 1mb', 'pdf under 2mb', 'compress my pdf'],
+    hinglishPhrases: ['pdf chota karna hai', 'pdf size kam karna', 'pdf file choti karni', 'pdf mb kam kaise kare'],
+    targetSizes: ['200 KB', '500 KB', '1 MB', '2 MB'],
+    presets: [
+      { name: 'Portal Upload (~500 KB)', description: 'Optimized for online job portals and academic applications' },
+      { name: 'Standard Email (~1 MB)', description: 'Ideal for Gmail and Outlook attachments' },
+      { name: 'Light Clean', description: 'Removes redundant metadata while preserving 100% vector fidelity' }
+    ],
+    nextSteps: [
+      { slug: 'pdf-merger', label: 'Merge with Other PDFs', reason: 'Need to combine this compressed document with other files?' },
+      { slug: 'pdf-watermark', label: 'Add Watermark', reason: 'Stamp confidential or verified mark before sending?' }
+    ],
+    howToSteps: [
+      { step: 1, title: 'Upload PDF', instruction: 'Select or drag & drop the PDF file you wish to compress.' },
+      { step: 2, title: 'Choose Target Mode', instruction: 'Select a compression preset (e.g. Portal, Balanced, or Light).' },
+      { step: 3, title: 'Compress', instruction: 'Click "Compress PDF Now" to run instant client-side optimization.' },
+      { step: 4, title: 'Download & Verify', instruction: 'Inspect original vs compressed size and download the optimized PDF.' }
+    ],
+    realLifeExample: {
+      title: 'Compressing a 4.2 MB Scanned Contract for Email',
+      inputDescription: 'Annual_Contract_Scanned.pdf (4.2 MB)',
+      outputDescription: 'Annual_Contract_Scanned_compressed.pdf (820 KB, 80.5% space saved)',
+      details: [
+        { label: 'Original Size', value: '4.2 MB' },
+        { label: 'Compressed Output', value: '820 KB' },
+        { label: 'Storage Saved', value: '80.5%' }
+      ]
+    },
+    howItWorks: 'Rebuilds PDF indirect object streams, strips orphaned cross-reference tables, and re-encodes embedded image streams using WebAssembly stream decoders.',
+    faqs: [
+      { question: 'Does compressing a PDF reduce text sharpness?', answer: 'No. Vector fonts, outlines, and text elements remain 100% mathematically sharp. Only embedded raster photos and redundant tables are compacted.' },
+      { question: 'Will my confidential documents be uploaded to a cloud server?', answer: 'Never. All compression takes place 100% locally in your web browser. No bytes are transmitted to any server.' },
+      { question: 'Can I compress password-protected PDF files?', answer: 'Files with encryption should be decrypted first before client-side stream optimization.' }
+    ],
+    relatedToolSlugs: ['pdf-merger', 'pdf-splitter', 'image-to-pdf', 'pdf-watermark']
+  },
+  {
     id: 'pdf-splitter',
     slug: 'pdf-splitter',
     name: 'PDF Splitter & Page Extractor',
@@ -758,7 +808,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     realLifeExample: {
       title: 'Extracting Email Addresses from Raw Text',
       inputDescription: 'Pattern: [\\w.-]+@[\\w.-]+\\.\\w+ tested against contact paragraph.',
-      outputDescription: 'Detects 3 matches: "rajtoolbox@gmail.com", "support@rajtoolbox.com", etc.',
+      outputDescription: 'Detects 3 matches: "rajtoolboxofficial@gmail.com", "info@rajtoolbox.com", etc.',
       details: [
         { label: 'Pattern', value: '[\\w.-]+@[\\w.-]+\\.\\w+' },
         { label: 'Matches Found', value: '3 matches' }

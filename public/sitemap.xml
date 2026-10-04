@@ -136,6 +136,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/tools/pdf-compressor/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/tools/pdf-splitter/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

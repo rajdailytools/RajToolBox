@@ -526,7 +526,7 @@ export const HashGeneratorComponent: React.FC = () => {
 export const RegexTesterComponent: React.FC = () => {
   const [pattern, setPattern] = useState('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}');
   const [flags, setFlags] = useState('g');
-  const [text, setText] = useState('Contact our team at rajtoolbox@gmail.com or support@rajtoolbox.com for help.');
+  const [text, setText] = useState('Contact our team at rajtoolboxofficial@gmail.com or info@rajtoolbox.com for help.');
   const [matches, setMatches] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 

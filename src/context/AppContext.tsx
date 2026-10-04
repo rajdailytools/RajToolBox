@@ -11,6 +11,7 @@ interface AppContextType {
   isFavorite: (slug: string) => boolean;
   recentlyUsed: string[];
   addRecentlyUsed: (slug: string) => void;
+  clearRecentlyUsed: () => void;
   toasts: ToastMessage[];
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   currentPath: string;
@@ -107,6 +108,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
+  const clearRecentlyUsed = () => {
+    setRecentlyUsed([]);
+    try {
+      localStorage.removeItem('rajtoolbox_recent');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Toast system
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -154,6 +164,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isFavorite,
         recentlyUsed,
         addRecentlyUsed,
+        clearRecentlyUsed,
         toasts,
         showToast,
         currentPath,

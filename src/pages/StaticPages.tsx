@@ -96,7 +96,7 @@ export const ContactPage: React.FC = () => {
     setSubmitted(true);
     showToast('Inquiry drafted! Launching email client fallback.', 'info');
     // Open mailto fallback so user message is genuinely delivered
-    window.location.href = `mailto:rajtoolbox@gmail.com?subject=${encodeURIComponent(
+    window.location.href = `mailto:rajtoolboxofficial@gmail.com?subject=${encodeURIComponent(
       subject || 'RajToolBox Feedback'
     )}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`)}`;
   };
@@ -121,10 +121,10 @@ export const ContactPage: React.FC = () => {
           <div>
             <span className="text-[#71717A] block font-medium">Direct Email Contact:</span>
             <a
-              href="mailto:rajtoolbox@gmail.com"
+              href="mailto:rajtoolboxofficial@gmail.com"
               className="font-bold text-[#18181B] dark:text-[#F4F4F5] hover:text-[#EC4899]"
             >
-              rajtoolbox@gmail.com
+              rajtoolboxofficial@gmail.com
             </a>
           </div>
         </div>
@@ -221,7 +221,7 @@ export const PrivacyPolicyPage: React.FC = () => (
         3. Contact Information
       </h2>
       <p>
-        If you have questions regarding this Privacy Policy, you may contact us directly at <a href="mailto:rajtoolbox@gmail.com" className="text-[#EC4899] underline">rajtoolbox@gmail.com</a>.
+        If you have questions regarding this Privacy Policy, you may contact us directly at <a href="mailto:rajtoolboxofficial@gmail.com" className="text-[#EC4899] underline">rajtoolboxofficial@gmail.com</a>.
       </p>
     </div>
   </div>
@@ -256,6 +256,13 @@ export const TermsPage: React.FC = () => (
       <p>
         All calculations, conversions, and document operations are provided on an "as is" and "as available" basis without warranties of any kind. While every effort is made to maintain complete mathematical and programmatic accuracy, users should independently verify critical calculations.
       </p>
+
+      <h2 className="text-base font-bold text-[#18181B] dark:text-[#F4F4F5] pt-2">
+        4. Questions & Inquiries
+      </h2>
+      <p>
+        For questions regarding these Terms, contact us at <a href="mailto:rajtoolboxofficial@gmail.com" className="text-[#EC4899] underline">rajtoolboxofficial@gmail.com</a>.
+      </p>
     </div>
   </div>
 );
@@ -276,7 +283,7 @@ export const DisclaimerPage: React.FC = () => (
           Calculations, conversions, and document processing results are produced automatically by client-side software algorithms. They do not constitute formal engineering, financial, legal, or medical advice.
         </p>
         <p>
-          Always verify critical calculations independently with professional certified sources before making binding financial, structural, or legal commitments.
+          Always verify critical calculations independently with professional certified sources before making binding financial, structural, or legal commitments. For questions or corrections, contact <a href="mailto:rajtoolboxofficial@gmail.com" className="text-[#EC4899] underline">rajtoolboxofficial@gmail.com</a>.
         </p>
       </div>
     </div>
@@ -297,7 +304,7 @@ export const CopyrightPage: React.FC = () => (
         All original software interfaces, curated descriptions, brand designs, tutorials, formulas, and visual guides on RajToolBox are protected by copyright laws.
       </p>
       <p>
-        Created by Raj Singh Sengar (B.Sc. Physics). Independent platform. For licensing inquiries, reach out to <a href="mailto:rajtoolbox@gmail.com" className="text-[#EC4899] underline">rajtoolbox@gmail.com</a>.
+        Created by Raj Singh Sengar (B.Sc. Physics). Independent platform. For licensing inquiries, reach out to <a href="mailto:rajtoolboxofficial@gmail.com" className="text-[#EC4899] underline">rajtoolboxofficial@gmail.com</a>.
       </p>
     </div>
   </div>
@@ -318,9 +325,12 @@ export const AdvertisingPolicyPage: React.FC = () => (
       </h2>
       <ul className="list-disc pl-5 space-y-1">
         <li>No deceptive ads masquerading as tool download buttons or calculation triggers.</li>
-        <li>No pop-unders, disruptive interstitials, or forced redirect flows.</li>
-        <li>Transparent differentiation between editorial tool functionality and advertising blocks.</li>
+        <li>No popup ads, audio auto-play, or malware redirects.</li>
+        <li>Clearly differentiated advertising spots that never interfere with tool calculations.</li>
       </ul>
+      <p className="pt-2">
+        For advertising partnerships or reporting problematic ad units, email <a href="mailto:rajtoolboxofficial@gmail.com" className="text-[#EC4899] underline">rajtoolboxofficial@gmail.com</a>.
+      </p>
     </div>
   </div>
 );

@@ -12,7 +12,7 @@ export const QrCodeComponent: React.FC = () => {
   const [wifiSsid, setWifiSsid] = useState('Home_WiFi');
   const [wifiPassword, setWifiPassword] = useState('mypassword123');
   const [wifiEncryption, setWifiEncryption] = useState('WPA');
-  const [emailTo, setEmailTo] = useState('rajtoolbox@gmail.com');
+  const [emailTo, setEmailTo] = useState('rajtoolboxofficial@gmail.com');
   const [emailSubject, setEmailSubject] = useState('Hello RajToolBox');
   const [phoneInput, setPhoneInput] = useState('+1234567890');
   const [darkColor, setDarkColor] = useState('#18181B');

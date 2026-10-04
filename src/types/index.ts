@@ -58,6 +58,18 @@ export interface ToolFAQ {
   answer: string;
 }
 
+export interface ToolNextStep {
+  slug: string;
+  label: string;
+  reason: string;
+}
+
+export interface ToolPreset {
+  name: string;
+  description: string;
+  badge?: string;
+}
+
 export interface ToolItem {
   id: string;
   slug: string;
@@ -81,6 +93,45 @@ export interface ToolItem {
   };
   faqs: ToolFAQ[];
   relatedToolSlugs: string[];
+  aliases?: string[];
+  useCases?: string[];
+  problemPhrases?: string[];
+  intentPhrases?: string[];
+  hinglishPhrases?: string[];
+  workflowIds?: string[];
+  nextSteps?: ToolNextStep[];
+  targetSizes?: string[];
+  presets?: ToolPreset[];
+  limitations?: string[];
+  tips?: string[];
+  troubleshooting?: { problem: string; solution: string }[];
+}
+
+export interface WorkflowStep {
+  step: number;
+  title: string;
+  description: string;
+  toolSlug: string;
+}
+
+export interface ToolWorkflow {
+  id: string;
+  title: string;
+  category: ToolCategory;
+  description: string;
+  iconName: string;
+  badge: string;
+  steps: WorkflowStep[];
+}
+
+export interface GuideItem {
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  targetSlug: string;
+  readTime: string;
+  keywords: string[];
 }
 
 export interface ToastMessage {
