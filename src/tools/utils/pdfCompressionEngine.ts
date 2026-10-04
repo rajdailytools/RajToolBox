@@ -5,7 +5,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Initialize PDF.js worker URL for browser environments
 if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '3.11.174'}/build/pdf.worker.min.js`;
+    const version = pdfjsLib.version || '3.11.174';
+    // Use cdnjs with cross-origin headers, fallback to unpkg
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
   } catch {
     // fallback to main thread if worker script fails
   }
@@ -407,7 +409,7 @@ async function executePageRasterPass(
 
   try {
     const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(buffer),
+      data: new Uint8Array(buffer.slice(0)),
       cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
       cMapPacked: true,
       useSystemFonts: true
@@ -416,8 +418,6 @@ async function executePageRasterPass(
     const numPages = pdf.numPages;
     if (numPages === 0) return null;
 
-    // Load original with pdf-lib to read exact page dimension points
-    const origPdfLibDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
     const newDoc = await PDFDocument.create();
 
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -429,6 +429,9 @@ async function executePageRasterPass(
       canvas.height = Math.round(viewport.height);
       const ctx = canvas.getContext('2d');
       if (!ctx) return null;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       await page.render({
         canvasContext: ctx,
@@ -444,9 +447,10 @@ async function executePageRasterPass(
       const pageJpgBytes = new Uint8Array(await pageJpgBlob.arrayBuffer());
       const embeddedJpg = await newDoc.embedJpg(pageJpgBytes);
 
-      // Keep original page points
-      const origPage = origPdfLibDoc.getPage(pageNum - 1);
-      const { width: origW, height: origH } = origPage.getSize();
+      // In PDF points (72 DPI), page.getViewport({ scale: 1.0 }) gives the exact unscaled page dimensions
+      const baseViewport = page.getViewport({ scale: 1.0 });
+      const origW = baseViewport.width;
+      const origH = baseViewport.height;
 
       const newPage = newDoc.addPage([origW, origH]);
       newPage.drawImage(embeddedJpg, {
@@ -485,7 +489,7 @@ export async function compressPdfWithEngine(
   const originalSize = file.size;
 
   options.onProgress?.('Analyzing document structure & resources...', 10);
-  const analysis = await analyzePdfDocument(buffer);
+  const analysis = await analyzePdfDocument(buffer.slice(0));
 
   if (analysis.isEncrypted) {
     throw new Error('This PDF is password-protected. Please remove password protection before compressing.');
@@ -498,10 +502,10 @@ export async function compressPdfWithEngine(
   // -------------------------------------------------------------
   // PASS 1: Baseline Structural & Metadata Optimization
   // -------------------------------------------------------------
-  options.onProgress?.('Pass 1: Cleaning metadata & deflating streams...', 25);
+  options.onProgress?.('Pass 1: Cleaning metadata & deflating streams...', 20);
   passesRun++;
 
-  const pass1Bytes = await executePdfLibPass(buffer, {
+  const pass1Bytes = await executePdfLibPass(buffer.slice(0), {
     stripMetadata: options.stripMetadata,
     removeAnnotations: options.removeAnnotations,
     scale: 1.0,
@@ -525,27 +529,27 @@ export async function compressPdfWithEngine(
   // -------------------------------------------------------------
   // PASS 2: Embedded Image Stream Recompression (pdf-lib)
   // -------------------------------------------------------------
-  options.onProgress?.('Pass 2: Optimizing embedded image streams...', 45);
+  options.onProgress?.('Pass 2: Optimizing embedded image streams...', 40);
   passesRun++;
 
   let p2Scale = 0.85;
   let p2Quality = 0.72;
 
   if (compressionLevel === 'strong') {
-    p2Scale = 0.7;
+    p2Scale = 0.70;
     p2Quality = 0.55;
   } else if (compressionLevel === 'target') {
     const ratio = targetBytes / bestSize;
     if (ratio < 0.25) {
-      p2Scale = 0.6;
+      p2Scale = 0.60;
       p2Quality = 0.45;
     } else if (ratio < 0.6) {
       p2Scale = 0.75;
-      p2Quality = 0.6;
+      p2Quality = 0.60;
     }
   }
 
-  const pass2Bytes = await executePdfLibPass(buffer, {
+  const pass2Bytes = await executePdfLibPass(buffer.slice(0), {
     stripMetadata: options.stripMetadata,
     removeAnnotations: options.removeAnnotations,
     scale: p2Scale,
@@ -558,23 +562,27 @@ export async function compressPdfWithEngine(
     bestSize = pass2Bytes.length;
   }
 
-  if (compressionLevel === 'recommended' || (targetBytes > 0 && bestSize <= targetBytes)) {
-    return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Optimization complete.');
+  if (compressionLevel === 'recommended') {
+    return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Recommended optimization complete.');
+  }
+
+  if (targetBytes > 0 && bestSize <= targetBytes) {
+    return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Target reached on image optimization!');
   }
 
   // -------------------------------------------------------------
   // PASS 3: Deep Progressive Tuning (Target Mode or Strong Mode)
   // -------------------------------------------------------------
   if (compressionLevel === 'target' || compressionLevel === 'strong') {
-    if (targetBytes > 0 && bestSize > targetBytes) {
-      options.onProgress?.('Pass 3: Progressive deep compression toward target...', 65);
+    if (compressionLevel === 'strong' || (targetBytes > 0 && bestSize > targetBytes)) {
+      options.onProgress?.('Pass 3: Progressive deep compression...', 60);
       passesRun++;
 
-      const ratio = targetBytes / bestSize;
-      const p3Scale = ratio < 0.3 ? 0.45 : 0.6;
+      const ratio = targetBytes > 0 ? targetBytes / bestSize : 0.5;
+      const p3Scale = ratio < 0.3 ? 0.45 : 0.60;
       const p3Quality = ratio < 0.3 ? 0.35 : 0.48;
 
-      const pass3Bytes = await executePdfLibPass(buffer, {
+      const pass3Bytes = await executePdfLibPass(buffer.slice(0), {
         stripMetadata: options.stripMetadata,
         removeAnnotations: options.removeAnnotations,
         scale: p3Scale,
@@ -586,45 +594,88 @@ export async function compressPdfWithEngine(
         bestBytes = pass3Bytes;
         bestSize = pass3Bytes.length;
       }
-    }
-  }
 
-  // -------------------------------------------------------------
-  // PASS 4: Raster Progressive Engine for Scanned / Stubborn PDFs
-  // If target size is still not reached and target is aggressive (e.g. 40KB from 963KB)
-  // -------------------------------------------------------------
-  if (compressionLevel === 'target' && targetBytes > 0 && bestSize > targetBytes) {
-    const ratio = targetBytes / bestSize;
-    if (ratio < 0.8 && analysis.pageCount > 0 && analysis.pageCount <= 20) {
-      options.onProgress?.('Pass 4: Progressive page rasterization at target resolution...', 85);
-      passesRun++;
-
-      // Compute scale and quality based on target budget
-      const targetScale = ratio < 0.2 ? 0.75 : 0.95;
-      const targetQuality = Math.max(0.25, Math.min(0.65, ratio * 0.9));
-
-      const pass4Bytes = await executePageRasterPass(buffer, targetBytes, targetScale, targetQuality);
-
-      if (pass4Bytes && pass4Bytes.length < bestSize) {
-        bestBytes = pass4Bytes;
-        bestSize = pass4Bytes.length;
+      if (targetBytes > 0 && bestSize <= targetBytes) {
+        return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, 'Target reached on progressive pass!');
       }
     }
   }
 
   // -------------------------------------------------------------
-  // PASS 5: Readability Floor Guard (Final Safe Attempt)
+  // PASS 4, 5, 6: Target-Driven Progressive Search & Raster Engine
+  // For stubborn PDFs, scanned pages, or aggressive targets (e.g. 40 KB from 963 KB)
   // -------------------------------------------------------------
-  if (compressionLevel === 'target' && targetBytes > 0 && bestSize > targetBytes) {
-    const ratio = targetBytes / bestSize;
-    if (ratio < 0.5 && analysis.pageCount > 0 && analysis.pageCount <= 10) {
-      options.onProgress?.('Pass 5: Maximum safe compression at readability limit...', 95);
+  if (compressionLevel === 'target' && targetBytes > 0 && bestSize > targetBytes && analysis.pageCount > 0 && analysis.pageCount <= 50) {
+    const pageCount = Math.max(1, analysis.pageCount);
+    const budgetPerPage = Math.max(8 * 1024, Math.floor((targetBytes - 2048) / pageCount));
+
+    // Iteration 1: Initial calibrated raster attempt based on per-page byte budget
+    options.onProgress?.('Pass 4: Calibrated progressive rendering toward target...', 75);
+    passesRun++;
+
+    let rScale = 0.95;
+    let rQuality = 0.50;
+
+    if (budgetPerPage >= 200 * 1024) {
+      rScale = 1.40;
+      rQuality = 0.75;
+    } else if (budgetPerPage >= 100 * 1024) {
+      rScale = 1.20;
+      rQuality = 0.65;
+    } else if (budgetPerPage >= 50 * 1024) {
+      rScale = 0.95;
+      rQuality = 0.50;
+    } else if (budgetPerPage >= 25 * 1024) {
+      rScale = 0.80;
+      rQuality = 0.38;
+    } else {
+      rScale = 0.68;
+      rQuality = 0.28;
+    }
+
+    const iter1Bytes = await executePageRasterPass(buffer.slice(0), targetBytes, rScale, rQuality);
+    if (iter1Bytes && iter1Bytes.length < bestSize) {
+      bestBytes = iter1Bytes;
+      bestSize = iter1Bytes.length;
+    }
+
+    // Check if target was reached
+    if (bestSize <= targetBytes) {
+      return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, '✓ Target reached!');
+    }
+
+    // Iteration 2: Quality/Scale Search Adjustment
+    if (bestSize > targetBytes) {
+      options.onProgress?.('Pass 5: Fine-tuning compression parameters toward target...', 88);
       passesRun++;
 
-      const pass5Bytes = await executePageRasterPass(buffer, targetBytes, 0.6, 0.28);
-      if (pass5Bytes && pass5Bytes.length < bestSize) {
-        bestBytes = pass5Bytes;
-        bestSize = pass5Bytes.length;
+      const shortfallRatio = targetBytes / bestSize; // e.g. 0.6
+      const adjScale = Math.max(0.55, parseFloat((rScale * Math.sqrt(shortfallRatio) * 0.95).toFixed(2)));
+      const adjQuality = Math.max(0.22, parseFloat((rQuality * shortfallRatio * 0.92).toFixed(2)));
+
+      const iter2Bytes = await executePageRasterPass(buffer.slice(0), targetBytes, adjScale, adjQuality);
+      if (iter2Bytes && iter2Bytes.length < bestSize) {
+        bestBytes = iter2Bytes;
+        bestSize = iter2Bytes.length;
+      }
+
+      if (bestSize <= targetBytes) {
+        return finalizeResult(bestBytes, buffer, originalSize, targetBytes, analysis, passesRun, '✓ Target reached on fine-tuning!');
+      }
+    }
+
+    // Iteration 3: Minimum Safe Readability Floor
+    if (bestSize > targetBytes) {
+      options.onProgress?.('Pass 6: Readability floor guard (maximum safe compression)...', 95);
+      passesRun++;
+
+      const floorScale = 0.52;
+      const floorQuality = 0.20;
+
+      const iter3Bytes = await executePageRasterPass(buffer.slice(0), targetBytes, floorScale, floorQuality);
+      if (iter3Bytes && iter3Bytes.length < bestSize) {
+        bestBytes = iter3Bytes;
+        bestSize = iter3Bytes.length;
       }
     }
   }
