@@ -1,19 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.rajtoolbox.com"
-        }
-      ],
-      "destination": "https://rajtoolbox.com/:path*",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/assets/(.*)\\.css",
