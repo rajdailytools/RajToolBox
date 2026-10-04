@@ -34,23 +34,48 @@ function ensureDir(dirPath: string) {
   }
 }
 
-// Extract bundles and assets from dist/index.html
+// Extract actual bundles and assets directly from dist/assets/ directory
 function getViteAssets(): AssetManifest {
-  const indexHtmlPath = path.join(DIST_DIR, 'index.html');
-  if (!fs.existsSync(indexHtmlPath)) {
-    throw new Error('dist/index.html not found! Please run vite build first.');
+  const assetsDir = path.join(DIST_DIR, 'assets');
+  if (!fs.existsSync(assetsDir)) {
+    throw new Error(`[Assets Error] dist/assets directory not found at ${assetsDir}! Please run vite build first.`);
   }
 
-  const html = fs.readFileSync(indexHtmlPath, 'utf8');
+  const assetFiles = fs.readdirSync(assetsDir);
 
-  // Match module scripts
-  const scriptMatches = html.match(/<script\s+type="module"[^>]*src="[^"]+"[^>]*><\/script>/gi) || [];
-  // Match stylesheet links
-  const styleMatches = html.match(/<link\s+rel="stylesheet"[^>]*href="[^"]+"[^>]*>/gi) || [];
+  // 1. Identify CSS files
+  const cssFiles = assetFiles.filter((f) => f.endsWith('.css'));
+  if (cssFiles.length === 0) {
+    throw new Error('[Assets Error] No CSS files found in dist/assets! Production build cannot be unstyled.');
+  }
+
+  // 2. Identify JS files
+  const jsFiles = assetFiles.filter((f) => f.endsWith('.js'));
+  if (jsFiles.length === 0) {
+    throw new Error('[Assets Error] No JS files found in dist/assets! Production build requires React JS bundle.');
+  }
+
+  // Prioritize primary entry bundle (starts with index- or is main bundle)
+  const entryJs = jsFiles.find((f) => f.startsWith('index-')) || jsFiles[0];
+  const chunkJs = jsFiles.filter((f) => f !== entryJs);
+
+  // Generate root-absolute URLs (starting with /assets/)
+  const styles = cssFiles.map((file) => `<link rel="stylesheet" crossorigin href="/assets/${file}">`);
+  const scripts = [
+    `<script type="module" crossorigin src="/assets/${entryJs}"></script>`
+  ];
+  const preloads = chunkJs.map((file) => `<link rel="modulepreload" crossorigin href="/assets/${file}">`);
+
+  console.log('[Assets Inspection]');
+  console.log(`  CSS files detected (${cssFiles.length}):`, cssFiles.map((f) => `/assets/${f}`));
+  console.log(`  Primary JS entry detected: /assets/${entryJs}`);
+  if (chunkJs.length > 0) {
+    console.log(`  Secondary JS chunks (${chunkJs.length}):`, chunkJs.map((f) => `/assets/${f}`));
+  }
 
   return {
-    scripts: scriptMatches,
-    styles: styleMatches
+    scripts,
+    styles: [...styles, ...preloads]
   };
 }
 
