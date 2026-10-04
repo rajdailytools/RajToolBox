@@ -45,18 +45,19 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     shortDescription: 'Reduce PDF file size locally in your browser to fit job portals, email attachments, and online submission forms.',
     fullDescription: 'Compress large PDF documents, scanned bills, portfolios, and reports without server uploads. Uses client-side stream optimization to reconstruct object tables and strip redundant metadata while keeping text crisp.',
     iconName: 'FileText',
-    keywords: ['compress pdf', 'reduce pdf size', 'pdf compressor', 'pdf under 1mb', 'pdf under 500kb', 'shrink pdf', 'downsize pdf'],
+    keywords: ['compress pdf', 'reduce pdf size', 'pdf compressor', 'pdf under 1mb', 'pdf under 500kb', 'pdf under 200kb', 'pdf under 100kb', 'shrink pdf', 'downsize pdf', 'pdf compressor 11zon', 'compress pdf online free'],
     popular: true,
     featured: true,
-    aliases: ['pdf size reducer', 'pdf downscaler', 'pdf shrinker', 'pdf optimizer'],
-    useCases: ['email attachment size reduction', 'job portal document upload', 'government exam application forms', 'mobile bandwidth saving'],
-    problemPhrases: ['pdf is too large', 'file exceeds 2mb limit', 'cannot upload pdf to portal', 'make pdf smaller'],
-    intentPhrases: ['pdf under 100kb', 'pdf under 500kb', 'pdf under 1mb', 'pdf under 2mb', 'compress my pdf'],
-    hinglishPhrases: ['pdf chota karna hai', 'pdf size kam karna', 'pdf file choti karni', 'pdf mb kam kaise kare'],
-    targetSizes: ['200 KB', '500 KB', '1 MB', '2 MB'],
+    aliases: ['pdf size reducer', 'pdf downscaler', 'pdf shrinker', 'pdf optimizer', 'online pdf compressor'],
+    useCases: ['government exam application uploads', 'job portal document upload', 'scholarship portal documents', 'email attachment size reduction', 'mobile cellular sharing'],
+    problemPhrases: ['pdf is too large', 'file exceeds 2mb limit', 'cannot upload pdf to portal', 'make pdf smaller', 'pdf file size exceeds 200kb'],
+    intentPhrases: ['pdf under 100kb', 'pdf under 200kb', 'pdf under 300kb', 'pdf under 500kb', 'pdf under 1mb', 'pdf under 2mb', 'compress my pdf'],
+    hinglishPhrases: ['pdf chota karna hai', 'pdf size kam karna', 'pdf file choti karni', 'pdf mb kam kaise kare', 'pdf compress kaise kare'],
+    targetSizes: ['20 KB', '30 KB', '40 KB', '50 KB', '100 KB', '200 KB', '300 KB', '500 KB', '1 MB', '2 MB', '5 MB'],
     presets: [
-      { name: 'Portal Upload (~500 KB)', description: 'Optimized for online job portals and academic applications' },
-      { name: 'Standard Email (~1 MB)', description: 'Ideal for Gmail and Outlook attachments' },
+      { name: 'UPSC / SSC Govt Portal (~200 KB)', description: 'Optimized for online civil service, recruitment, and admission portals' },
+      { name: 'Standard Email (~1 MB)', description: 'Ideal for Gmail, Outlook, and corporate email attachments' },
+      { name: 'Job Portals (~500 KB)', description: 'Recommended for LinkedIn, Naukri, and ATS resume uploads' },
       { name: 'Light Clean', description: 'Removes redundant metadata while preserving 100% vector fidelity' }
     ],
     nextSteps: [
@@ -64,14 +65,14 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       { slug: 'pdf-watermark', label: 'Add Watermark', reason: 'Stamp confidential or verified mark before sending?' }
     ],
     howToSteps: [
-      { step: 1, title: 'Upload PDF', instruction: 'Select or drag & drop the PDF file you wish to compress.' },
-      { step: 2, title: 'Choose Target Mode', instruction: 'Select a compression preset (e.g. Portal, Balanced, or Light).' },
-      { step: 3, title: 'Compress', instruction: 'Click "Compress PDF Now" to run instant client-side optimization.' },
-      { step: 4, title: 'Download & Verify', instruction: 'Inspect original vs compressed size and download the optimized PDF.' }
+      { step: 1, title: 'Upload PDF Documents', instruction: 'Select or drag & drop single or multiple PDF files into the upload box.' },
+      { step: 2, title: 'Choose Compression Mode', instruction: 'Select Basic, Recommended, Strong, or Target Size (e.g. 100KB, 200KB, 500KB).' },
+      { step: 3, title: 'Compress', instruction: 'Click "Compress PDF Now" to execute 100% private in-browser optimization.' },
+      { step: 4, title: 'Preview & Download', instruction: 'Inspect the document in the live preview and download your reduced PDF.' }
     ],
     realLifeExample: {
       title: 'Compressing a 4.2 MB Scanned Contract for Email',
-      inputDescription: 'Annual_Contract_Scanned.pdf (4.2 MB)',
+      inputDescription: 'Annual_Contract_Scanned.pdf (4.2 MB, 600 DPI scan)',
       outputDescription: 'Annual_Contract_Scanned_compressed.pdf (820 KB, 80.5% space saved)',
       details: [
         { label: 'Original Size', value: '4.2 MB' },
@@ -81,9 +82,31 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     },
     howItWorks: 'Rebuilds PDF indirect object streams, strips orphaned cross-reference tables, and re-encodes embedded image streams using WebAssembly stream decoders.',
     faqs: [
-      { question: 'Does compressing a PDF reduce text sharpness?', answer: 'No. Vector fonts, outlines, and text elements remain 100% mathematically sharp. Only embedded raster photos and redundant tables are compacted.' },
-      { question: 'Will my confidential documents be uploaded to a cloud server?', answer: 'Never. All compression takes place 100% locally in your web browser. No bytes are transmitted to any server.' },
-      { question: 'Can I compress password-protected PDF files?', answer: 'Files with encryption should be decrypted first before client-side stream optimization.' }
+      { question: 'What is a PDF compressor?', answer: 'A PDF compressor is a specialized utility that analyzes the internal structure of a PDF document—including cross-reference tables, indirect object streams, font subsets, and image dictionaries—and restructures them to occupy significantly fewer bytes while preserving document readability.' },
+      { question: 'How can I reduce PDF size?', answer: 'Upload your document to RajToolBox PDF Compressor, select your desired compression level (Recommended, Strong, or Target Size), click Compress, preview the result, and download your optimized document.' },
+      { question: 'Can I compress PDF online for free?', answer: 'Yes. RajToolBox PDF Compressor is 100% free with no subscriptions, watermarks, page limits, or file caps. You can compress as many documents as needed.' },
+      { question: 'Can I compress PDF to 100KB?', answer: 'Yes. Select "Target Size" mode and choose the "100 KB" preset. For 1-to-3 page documents, the compressor effectively compacts stream dictionaries to reach 100 KB for scholarship and exam portals.' },
+      { question: 'Can I compress PDF to 200KB?', answer: 'Yes. 200 KB is the standard requirement for UPSC, SSC, and state PSC job application portals. Select the "200 KB" preset for fast, reliable compression.' },
+      { question: 'Can I compress PDF to 300KB?', answer: 'Yes. Choose the "300 KB" preset, commonly required by banking KYC portals and insurance claim submission websites.' },
+      { question: 'Can I compress PDF to 1MB?', answer: 'Yes. The 1 MB preset is ideal for college admissions, academic project submissions, and professional email attachments.' },
+      { question: 'Can I compress PDF to 2MB?', answer: 'Yes. 2 MB is the standard upload ceiling for LinkedIn, Indeed, Naukri, and corporate HR portal resume submissions.' },
+      { question: 'Can I compress PDF to 5MB?', answer: 'Yes. Select the 5 MB preset for large documents, reports, and portfolios to ensure they stay well under corporate email server limits.' },
+      { question: 'How do I compress PDF without losing quality?', answer: 'Choose "Basic / Light" or "Recommended" mode. These modes compact structural PDF tables and strip redundant XML metadata while retaining 100% vector font sharpness and high image fidelity.' },
+      { question: 'Why does my PDF remain large after compression?', answer: 'If a PDF consists of dozens of 600-DPI full-color scanned pages or was already pre-compressed by high-end scanner software, further reduction without downsampling images is mathematically constrained.' },
+      { question: 'Can I compress a scanned PDF?', answer: 'Yes. Scanned PDFs typically show the largest byte reduction because uncompressed scanner bitmaps can be compacted significantly.' },
+      { question: 'Can I compress multiple PDFs at once?', answer: 'Yes. RajToolBox fully supports bulk compression. Click "+ Add More Files" to queue multiple PDFs, compress all simultaneously, and download each result.' },
+      { question: 'Can I compress a large PDF (50 MB or 100 MB)?', answer: 'Yes. Modern devices with current versions of Chrome, Safari, or Edge handle large documents directly in browser memory without issue.' },
+      { question: 'Can I preview the compressed PDF before downloading?', answer: 'Yes. A full in-browser PDF preview is generated immediately after compression so you can inspect text readability and page layouts before saving.' },
+      { question: 'Is PDF compression safe on RajToolBox?', answer: 'Completely safe. Unlike cloud-based converters that upload your confidential documents to external servers, RajToolBox processes everything locally inside your device browser.' },
+      { question: 'Are my PDF files uploaded to a server?', answer: 'Never. All PDF reading, stream optimization, and compression algorithms execute client-side via JavaScript and WebAssembly in your browser memory.' },
+      { question: 'Can I compress a password-protected PDF?', answer: 'Encrypted PDFs must be unlocked before compression because security wrappers lock indirect object syntax.' },
+      { question: 'Can I compress a digitally signed PDF?', answer: 'You should avoid compressing digitally signed PDFs. Modifying document byte streams invalidates cryptographic digital signature checksums.' },
+      { question: 'Why did my PDF quality become blurry with another tool?', answer: 'Aggressive tools downsample images to 72 DPI or heavy JPEG compression. RajToolBox Recommended mode preserves vector fonts and balances visual clarity.' },
+      { question: 'Can I compress PDF on mobile?', answer: 'Yes. The interface is optimized for iPhone, iPad, and Android mobile browsers with touch-friendly controls and responsive file handling.' },
+      { question: 'Can I share the compressed PDF directly?', answer: 'Yes. Use the built-in Native Share button on mobile, or share directly via WhatsApp, Telegram, and Email shortcuts.' },
+      { question: 'Can I use WhatsApp to share the compressed PDF?', answer: 'Yes. Click the WhatsApp share icon to share the tool or link directly with colleagues or clients.' },
+      { question: 'What happens if the target size cannot be reached?', answer: 'RajToolBox provides an honest status: it compacts the file to the lowest technically possible size without destroying legibility and displays "Best effort reached".' },
+      { question: 'Should I keep the original PDF?', answer: 'Always retain your original document as a master archival copy, especially for legal contracts, certificates, and archival records.' }
     ],
     relatedToolSlugs: ['pdf-merger', 'pdf-splitter', 'image-to-pdf', 'pdf-watermark']
   },

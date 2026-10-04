@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { TOOLS_REGISTRY } from '../src/data/tools.ts';
 import { CATEGORIES, CATEGORIES_LIST } from '../src/data/categories.ts';
 import { GUIDES_REGISTRY } from '../src/data/guides.ts';
+import { getPdfCompressorStaticHtml } from './pdfCompressorStaticContent.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -486,10 +487,16 @@ function generateToolPages(headAssets: AssetManifest): string[] {
     const categoryName = category?.name || tool.category;
     const categorySlug = category?.slug || tool.category;
 
-    const title = `${tool.name} – Free Online Tool | RajToolBox`;
-    const description = tool.shortDescription;
+    let title = `${tool.name} – Free Online Tool | RajToolBox`;
+    let description = tool.shortDescription;
     const canonicalUrl = `${BASE_URL}/tools/${tool.slug}/`;
     const keywords = (tool.keywords || []).concat(['online tools', 'free tool', 'rajtoolbox']).join(', ');
+
+    if (tool.slug === 'pdf-compressor') {
+      title = 'PDF Compressor Online – Reduce PDF Size | RajToolBox';
+      description =
+        'Compress PDF files online with adjustable compression and target sizes. Preview the result, reduce PDF size, download and share easily with RajToolBox.';
+    }
 
     // Structured data
     const jsonLd: object[] = [
@@ -633,7 +640,10 @@ function generateToolPages(headAssets: AssetManifest): string[] {
       : '';
 
     // Body content
-    const bodyContent = `
+    const bodyContent =
+      tool.slug === 'pdf-compressor'
+        ? getPdfCompressorStaticHtml()
+        : `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb Navigation -->
       <nav class="flex items-center gap-2 text-xs text-[#71717A] dark:text-[#A1A1AA] mb-6 flex-wrap" aria-label="Breadcrumb">

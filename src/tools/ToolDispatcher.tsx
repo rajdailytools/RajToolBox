@@ -1,5 +1,6 @@
 import React from 'react';
 import { ToolItem } from '../types';
+import { PdfCompressorTool } from './components/PdfCompressorTool';
 import {
   PdfMergerComponent,
   PdfCompressorComponent,
@@ -75,7 +76,7 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
     case 'pdf-merger':
       return <PdfMergerComponent />;
     case 'pdf-compressor':
-      return <PdfCompressorComponent />;
+      return <PdfCompressorTool />;
     case 'pdf-splitter':
       return <PdfSplitterComponent />;
     case 'image-to-pdf':

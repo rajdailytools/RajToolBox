@@ -13,12 +13,17 @@ import { VisualGraphBox } from '../components/ui/VisualGraphBox';
 import { ToolDispatcher } from '../tools/ToolDispatcher';
 import { Bookmark, ShieldCheck, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { PdfCompressorPage } from './PdfCompressorPage';
 
 interface ToolDetailPageProps {
   tool: ToolItem;
 }
 
 export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ tool }) => {
+  if (tool.slug === 'pdf-compressor') {
+    return <PdfCompressorPage tool={tool} />;
+  }
+
   const { isFavorite, toggleFavorite } = useApp();
   const category = CATEGORIES[tool.category];
   const favored = isFavorite(tool.slug);
