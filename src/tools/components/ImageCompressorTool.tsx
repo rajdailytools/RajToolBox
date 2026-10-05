@@ -61,22 +61,57 @@ export interface ImageQueueItem {
   dimensionChanged?: boolean;
 }
 
-export const ImageCompressorTool: React.FC = () => {
+export interface ImageCompressorToolProps {
+  controlledTargetPreset?: string;
+  onTargetPresetChange?: (preset: string) => void;
+  controlledCompressionMode?: CompressionMode;
+  onCompressionModeChange?: (mode: CompressionMode) => void;
+}
+
+export const ImageCompressorTool: React.FC<ImageCompressorToolProps> = ({
+  controlledTargetPreset,
+  onTargetPresetChange,
+  controlledCompressionMode,
+  onCompressionModeChange,
+}) => {
   const { showToast } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
+  const customInputRef = useRef<HTMLInputElement>(null);
 
   // File queue
   const [queue, setQueue] = useState<ImageQueueItem[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
-  // Compression settings
-  const [compressionMode, setCompressionMode] = useState<CompressionMode>('target');
-  const [targetPreset, setTargetPreset] = useState<string>('50kb');
+  // Compression settings (Internal with fallback to controlled)
+  const [internalCompressionMode, setInternalCompressionMode] = useState<CompressionMode>('target');
+  const [internalTargetPreset, setInternalTargetPreset] = useState<string>('50kb');
   const [customTargetValue, setCustomTargetValue] = useState<number>(100);
   const [customTargetUnit, setCustomTargetUnit] = useState<'KB' | 'MB'>('KB');
   const [qualitySlider, setQualitySlider] = useState<number>(0.8);
   const [outputFormat, setOutputFormat] = useState<OutputFormatChoice>('auto');
+
+  const compressionMode = controlledCompressionMode !== undefined ? controlledCompressionMode : internalCompressionMode;
+  const targetPreset = controlledTargetPreset !== undefined ? controlledTargetPreset : internalTargetPreset;
+
+  const setCompressionMode = (mode: CompressionMode) => {
+    setInternalCompressionMode(mode);
+    onCompressionModeChange?.(mode);
+  };
+
+  const setTargetPreset = (preset: string) => {
+    setInternalTargetPreset(preset);
+    onTargetPresetChange?.(preset);
+  };
+
+  // If custom target is activated, focus input
+  useEffect(() => {
+    if (targetPreset === 'custom') {
+      setTimeout(() => {
+        customInputRef.current?.focus();
+      }, 100);
+    }
+  }, [targetPreset]);
 
   // Dimension scaling settings
   const [dimensionMode, setDimensionMode] = useState<'original' | 'percent' | 'custom'>('original');
@@ -127,6 +162,9 @@ export const ImageCompressorTool: React.FC = () => {
       '300kb': 300 * 1024,
       '500kb': 500 * 1024,
       '1mb': 1024 * 1024,
+      '2mb': 2 * 1024 * 1024,
+      '5mb': 5 * 1024 * 1024,
+      '10mb': 10 * 1024 * 1024,
     };
     return map[targetPreset] || 50 * 1024;
   };
@@ -147,6 +185,9 @@ export const ImageCompressorTool: React.FC = () => {
       '300kb': '300 KB',
       '500kb': '500 KB',
       '1mb': '1 MB',
+      '2mb': '2 MB',
+      '5mb': '5 MB',
+      '10mb': '10 MB',
     };
     return map[targetPreset] || 'Target Size';
   };
@@ -432,7 +473,7 @@ export const ImageCompressorTool: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div id="image-compressor-tool-area" className="space-y-8 scroll-mt-24">
       {/* 1. UPLOAD & DRAG/DROP AREA */}
       {queue.length === 0 ? (
         <div
@@ -712,7 +753,7 @@ export const ImageCompressorTool: React.FC = () => {
                   <span className="text-[11px] text-[#71717A]">Binary quality search + safe dimension scaling</span>
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2">
                   {[
                     { id: '10kb', label: '10 KB' },
                     { id: '20kb', label: '20 KB' },
@@ -725,6 +766,9 @@ export const ImageCompressorTool: React.FC = () => {
                     { id: '300kb', label: '300 KB' },
                     { id: '500kb', label: '500 KB' },
                     { id: '1mb', label: '1 MB' },
+                    { id: '2mb', label: '2 MB' },
+                    { id: '5mb', label: '5 MB' },
+                    { id: '10mb', label: '10 MB' },
                     { id: 'custom', label: 'Custom' }
                   ].map((preset) => (
                     <button
@@ -745,12 +789,14 @@ export const ImageCompressorTool: React.FC = () => {
                 {targetPreset === 'custom' && (
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <input
+                      ref={customInputRef}
+                      id="custom-target-input"
                       type="number"
                       min="1"
                       step="any"
                       value={customTargetValue}
                       onChange={(e) => setCustomTargetValue(Math.max(1, parseFloat(e.target.value) || 1))}
-                      className="w-28 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-bold text-[#18181B] dark:text-[#F4F4F5]"
+                      className="w-28 px-3 py-1.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-bold text-[#18181B] dark:text-[#F4F4F5] focus:outline-hidden focus:border-[#EC4899]"
                       placeholder="e.g. 75"
                     />
                     <select

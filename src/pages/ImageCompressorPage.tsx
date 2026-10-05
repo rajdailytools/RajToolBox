@@ -30,6 +30,7 @@ import {
   Mail
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { CompressionMode } from '../tools/utils/imageCompressionEngine';
 
 interface ImageCompressorPageProps {
   tool: ToolItem;
@@ -43,6 +44,60 @@ export const ImageCompressorPage: React.FC<ImageCompressorPageProps> = ({ tool }
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeEdgeCase, setActiveEdgeCase] = useState<number | null>(null);
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
+
+  // Target size & compression mode state shared between tool and quick shortcut box
+  const [activeTargetPreset, setActiveTargetPreset] = useState<string>('50kb');
+  const [compressionMode, setCompressionMode] = useState<CompressionMode>('target');
+
+  // Support URL query parameter like ?target=100kb safely without changing canonical URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const targetParam = params.get('target')?.toLowerCase();
+      const validPresets = [
+        '10kb', '20kb', '30kb', '40kb', '50kb',
+        '100kb', '150kb', '200kb', '300kb', '500kb',
+        '1mb', '2mb', '5mb', '10mb', 'custom'
+      ];
+      if (targetParam && validPresets.includes(targetParam)) {
+        setActiveTargetPreset(targetParam);
+        setCompressionMode('target');
+      }
+    }
+  }, []);
+
+  const handleQuickTargetClick = (preset: string) => {
+    setActiveTargetPreset(preset);
+    setCompressionMode('target');
+
+    // Update query param safely without page reload or breaking static routing
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('target', preset);
+        window.history.replaceState(null, '', url.pathname + url.search);
+      } catch {
+        // Fallback for isolated web views
+      }
+    }
+
+    // Smoothly scroll to the tool area
+    const toolArea = document.getElementById('image-compressor-tool-area');
+    if (toolArea) {
+      toolArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (preset === 'custom') {
+      setTimeout(() => {
+        const customInput = document.getElementById('custom-target-input');
+        customInput?.focus();
+      }, 350);
+      showToast('Custom Target activated. Enter your target size.', 'info');
+    } else {
+      const label = preset.toUpperCase().replace('KB', ' KB').replace('MB', ' MB');
+      showToast(`Target Size set to ${label}. Ready to compress!`, 'info');
+    }
+  };
 
   // Sync document title and canonical meta for SEO
   useEffect(() => {
@@ -609,7 +664,12 @@ export const ImageCompressorPage: React.FC<ImageCompressorPageProps> = ({ tool }
 
       {/* 4. INTERACTIVE TOOL COMPONENT */}
       <div className="mb-12">
-        <ImageCompressorTool />
+        <ImageCompressorTool
+          controlledTargetPreset={activeTargetPreset}
+          onTargetPresetChange={setActiveTargetPreset}
+          controlledCompressionMode={compressionMode}
+          onCompressionModeChange={setCompressionMode}
+        />
       </div>
 
       {/* 5. HOW TO USE */}
@@ -979,6 +1039,132 @@ export const ImageCompressorPage: React.FC<ImageCompressorPageProps> = ({ tool }
 
         <div className="pt-2">
           <RelatedTools currentTool={tool} />
+        </div>
+      </section>
+
+      {/* QUICK TARGET SIZE SHORTCUT BOX */}
+      <section className="p-6 rounded-3xl bg-[#FFFDF7] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] mb-8 space-y-5 shadow-2xs">
+        <div>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+            <h2 className="text-lg font-black text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2">
+              <Zap className="w-5 h-5 text-[#F59E0B]" />
+              Quick Target Size
+            </h2>
+            <span className="text-[11px] font-semibold text-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20 px-2.5 py-0.5 rounded-full">
+              One-Click Target Activation
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA]">
+            Choose a target size to open the Image Compressor with that target already selected.
+          </p>
+        </div>
+
+        {/* Row 1: 10 KB to 50 KB */}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: '10kb', label: '10 KB' },
+              { id: '20kb', label: '20 KB' },
+              { id: '30kb', label: '30 KB' },
+              { id: '40kb', label: '40 KB' },
+              { id: '50kb', label: '50 KB' },
+            ].map((item) => {
+              const isSelected = compressionMode === 'target' && activeTargetPreset === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleQuickTargetClick(item.id)}
+                  className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] shadow-2xs scale-[1.02] ring-2 ring-[#FACC15]/40'
+                      : 'border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#202026] text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] hover:text-[#EC4899]'
+                  }`}
+                  title={`Open Image Compressor with ${item.label} target selected`}
+                >
+                  {item.label}
+                  {isSelected && ' ✓'}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Row 2: 100 KB to 500 KB */}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: '100kb', label: '100 KB' },
+              { id: '150kb', label: '150 KB' },
+              { id: '200kb', label: '200 KB' },
+              { id: '300kb', label: '300 KB' },
+              { id: '500kb', label: '500 KB' }
+            ].map((item) => {
+              const isSelected = compressionMode === 'target' && activeTargetPreset === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleQuickTargetClick(item.id)}
+                  className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] shadow-2xs scale-[1.02] ring-2 ring-[#FACC15]/40'
+                      : 'border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#202026] text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] hover:text-[#EC4899]'
+                  }`}
+                  title={`Open Image Compressor with ${item.label} target selected`}
+                >
+                  {item.label}
+                  {isSelected && ' ✓'}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Row 3: 1 MB to 10 MB */}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: '1mb', label: '1 MB' },
+              { id: '2mb', label: '2 MB' },
+              { id: '5mb', label: '5 MB' },
+              { id: '10mb', label: '10 MB' }
+            ].map((item) => {
+              const isSelected = compressionMode === 'target' && activeTargetPreset === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleQuickTargetClick(item.id)}
+                  className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] shadow-2xs scale-[1.02] ring-2 ring-[#FACC15]/40'
+                      : 'border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#202026] text-[#18181B] dark:text-[#F4F4F5] hover:border-[#EC4899] hover:text-[#EC4899]'
+                  }`}
+                  title={`Open Image Compressor with ${item.label} target selected`}
+                >
+                  {item.label}
+                  {isSelected && ' ✓'}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Row 4: Custom Target */}
+        <div className="pt-2 border-t border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => handleQuickTargetClick('custom')}
+            className={`inline-flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              compressionMode === 'target' && activeTargetPreset === 'custom'
+                ? 'border-[#854D0E] dark:border-[#FACC15] bg-[#FACC15] text-[#854D0E] shadow-2xs ring-2 ring-[#FACC15]/40'
+                : 'border-[#EC4899] text-[#EC4899] hover:bg-[#FCE7F3] dark:hover:bg-[#EC4899]/20'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Custom Target</span>
+          </button>
         </div>
       </section>
 
