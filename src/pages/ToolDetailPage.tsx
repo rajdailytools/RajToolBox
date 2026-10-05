@@ -14,6 +14,7 @@ import { ToolDispatcher } from '../tools/ToolDispatcher';
 import { Bookmark, ShieldCheck, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PdfCompressorPage } from './PdfCompressorPage';
+import { ImageCompressorPage } from './ImageCompressorPage';
 
 interface ToolDetailPageProps {
   tool: ToolItem;
@@ -22,6 +23,9 @@ interface ToolDetailPageProps {
 export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ tool }) => {
   if (tool.slug === 'pdf-compressor') {
     return <PdfCompressorPage tool={tool} />;
+  }
+  if (tool.slug === 'image-compressor') {
+    return <ImageCompressorPage tool={tool} />;
   }
 
   const { isFavorite, toggleFavorite } = useApp();

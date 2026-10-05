@@ -5,6 +5,7 @@ import { TOOLS_REGISTRY } from '../src/data/tools.ts';
 import { CATEGORIES, CATEGORIES_LIST } from '../src/data/categories.ts';
 import { GUIDES_REGISTRY } from '../src/data/guides.ts';
 import { getPdfCompressorStaticHtml } from './pdfCompressorStaticContent.ts';
+import { getImageCompressorStaticHtml } from './imageCompressorStaticContent.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -496,6 +497,10 @@ function generateToolPages(headAssets: AssetManifest): string[] {
       title = 'PDF Compressor Online – Reduce PDF Size | RajToolBox';
       description =
         'Compress PDF files online with adjustable compression and target sizes. Preview the result, reduce PDF size, download and share easily with RajToolBox.';
+    } else if (tool.slug === 'image-compressor') {
+      title = 'Image Compressor Online – Reduce Image Size in KB | RajToolBox';
+      description =
+        'Compress JPG, PNG, and WebP images online with target size options (20KB, 50KB, 100KB, 200KB). Preview Before & After, reduce image size in KB, download and share 100% privately in-browser.';
     }
 
     // Structured data
@@ -643,6 +648,8 @@ function generateToolPages(headAssets: AssetManifest): string[] {
     const bodyContent =
       tool.slug === 'pdf-compressor'
         ? getPdfCompressorStaticHtml()
+        : tool.slug === 'image-compressor'
+        ? getImageCompressorStaticHtml()
         : `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb Navigation -->

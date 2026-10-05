@@ -1,6 +1,7 @@
 import React from 'react';
 import { ToolItem } from '../types';
 import { PdfCompressorTool } from './components/PdfCompressorTool';
+import { ImageCompressorTool } from './components/ImageCompressorTool';
 import {
   PdfMergerComponent,
   PdfCompressorComponent,
@@ -88,7 +89,7 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
 
     // Image
     case 'image-compressor':
-      return <ImageCompressorComponent />;
+      return <ImageCompressorTool />;
     case 'image-resizer':
       return <ImageResizerComponent />;
     case 'image-format-converter':
