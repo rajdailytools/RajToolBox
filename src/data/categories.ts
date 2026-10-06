@@ -26,7 +26,7 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
     shortName: 'Text',
     description: 'Analyze word counts, convert cases, clean duplicate lines, find and replace, format slugs, and compare text differences instantly.',
     iconName: 'Type',
-    featuredTools: ['word-counter', 'case-converter', 'text-cleaner', 'text-diff-checker', 'find-and-replace', 'slug-generator']
+    featuredTools: ['text-case-converter', 'word-counter', 'case-converter', 'text-cleaner', 'text-diff-checker', 'find-and-replace', 'slug-generator']
   },
   'developer-tools': {
     id: 'developer-tools',

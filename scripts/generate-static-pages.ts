@@ -6,6 +6,7 @@ import { CATEGORIES, CATEGORIES_LIST } from '../src/data/categories.ts';
 import { GUIDES_REGISTRY } from '../src/data/guides.ts';
 import { getPdfCompressorStaticHtml } from './pdfCompressorStaticContent.ts';
 import { getImageCompressorStaticHtml } from './imageCompressorStaticContent.ts';
+import { getTextCaseConverterStaticHtml } from './textCaseConverterStaticContent.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -501,6 +502,10 @@ function generateToolPages(headAssets: AssetManifest): string[] {
       title = 'Image Compressor Online – Reduce Image Size in KB | RajToolBox';
       description =
         'Compress JPG, PNG, and WebP images online with target size options (20KB, 50KB, 100KB, 200KB). Preview Before & After, reduce image size in KB, download and share 100% privately in-browser.';
+    } else if (tool.slug === 'text-case-converter') {
+      title = 'Text Case Converter – Uppercase, Lowercase, Title Case & More | RajToolBox';
+      description =
+        'Free online Text Case Converter to change text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, snake_case, kebab-case and more. Clean spaces, line breaks and formatting instantly.';
     }
 
     // Structured data
@@ -650,6 +655,8 @@ function generateToolPages(headAssets: AssetManifest): string[] {
         ? getPdfCompressorStaticHtml()
         : tool.slug === 'image-compressor'
         ? getImageCompressorStaticHtml()
+        : tool.slug === 'text-case-converter'
+        ? getTextCaseConverterStaticHtml()
         : `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb Navigation -->

@@ -435,6 +435,64 @@ export const TOOLS_REGISTRY: ToolItem[] = [
 
   // TEXT TOOLS
   {
+    id: 'text-case-converter',
+    slug: 'text-case-converter',
+    name: 'Text Case Converter',
+    category: 'text-tools',
+    shortDescription: 'Convert text between uppercase, lowercase, Title Case, Sentence case, camelCase, snake_case, kebab-case and more, with advanced text cleanup.',
+    fullDescription: 'Comprehensive Text Case Converter and text formatting engine. Instantly convert text between UPPERCASE, lowercase, Title Case, Sentence case, Capitalize Each Word, camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, dot.case, and path/case. Clean extra spaces, remove unwanted line breaks from copied PDFs, normalize whitespace, and inspect live character, word, and reading-time statistics 100% privately in your browser.',
+    iconName: 'Type',
+    keywords: [
+      'text case converter',
+      'text formatting tool',
+      'uppercase converter',
+      'lowercase converter',
+      'title case converter',
+      'sentence case converter',
+      'camel case converter',
+      'snake case converter',
+      'kebab case converter',
+      'text cleaner',
+      'pascal case converter',
+      'constant case converter',
+      'convert text online',
+      'clean pdf copied text'
+    ],
+    popular: true,
+    featured: true,
+    aliases: ['case converter', 'text case changer', 'capitalization tool', 'text formatter', 'pdf text cleaner'],
+    useCases: [
+      'Article and blog headline formatting',
+      'Programming variable name conversion (camelCase, snake_case)',
+      'Fixing accidental all-caps or Caps Lock text',
+      'Cleaning fragmented lines from copied PDF documents',
+      'Formatting social media captions and essays'
+    ],
+    howToSteps: [
+      { step: 1, title: 'Enter Text', instruction: 'Paste or type your text into the left input panel, or click "Sample" to load test text.' },
+      { step: 2, title: 'Select Case or Cleanup', instruction: 'Choose from 16 case formats (Title Case, Sentence case, camelCase, etc.) or click "Clean Copied Text".' },
+      { step: 3, title: 'Copy or Download', instruction: 'Review the live converted text, inspect character counts, and click "Copy Converted Text" or "Download".' }
+    ],
+    realLifeExample: {
+      title: 'Formatting Blog Headlines & Cleaning Copied Lines',
+      inputDescription: '"the ultimate guide on how to learn web development in 2026"',
+      outputDescription: '"The Ultimate Guide on How to Learn Web Development in 2026"',
+      details: [
+        { label: 'Raw Input', value: 'all-lowercase sentence' },
+        { label: 'Title Case Output', value: 'Standard AP/Chicago Title Case' },
+        { label: 'camelCase Output', value: 'theUltimateGuideOnHowToLearnWebDevelopmentIn2026' }
+      ]
+    },
+    howItWorks: 'Uses client-side regex parsing, linguistic stop-word dictionaries, and intelligent word tokenizers to convert capitalization conventions and normalize whitespace entirely within your browser memory.',
+    faqs: [
+      { question: 'What is a text case converter?', answer: 'A text case converter transforms the capitalization of text characters according to standard linguistic rules or programming conventions without needing to retype words.' },
+      { question: 'How does Title Case work in RajToolBox?', answer: 'RajToolBox applies standard Chicago and AP grammatical title casing, capitalizing principal words while keeping minor stop words (such as a, an, the, and, in, of, with) lowercase.' },
+      { question: 'Can I clean text copied from PDFs and ChatGPT?', answer: 'Yes! The Clean Copied Text action unwraps artificial hard line breaks from PDFs while preserving true paragraph breaks.' },
+      { question: 'Is my text uploaded to any server?', answer: 'No. 100% of processing occurs in your browser memory, ensuring complete privacy.' }
+    ],
+    relatedToolSlugs: ['word-counter', 'case-converter', 'text-cleaner', 'find-and-replace', 'slug-generator', 'text-diff-checker']
+  },
+  {
     id: 'word-counter',
     slug: 'word-counter',
     name: 'Word & Character Counter',

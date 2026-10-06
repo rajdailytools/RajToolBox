@@ -2,6 +2,7 @@ import React from 'react';
 import { ToolItem } from '../types';
 import { PdfCompressorTool } from './components/PdfCompressorTool';
 import { ImageCompressorTool } from './components/ImageCompressorTool';
+import { TextCaseConverterTool } from './components/TextCaseConverterTool';
 import {
   PdfMergerComponent,
   PdfCompressorComponent,
@@ -102,6 +103,8 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
       return <ImageColorPickerComponent />;
 
     // Text
+    case 'text-case-converter':
+      return <TextCaseConverterTool />;
     case 'word-counter':
       return <WordCounterComponent />;
     case 'case-converter':

@@ -15,6 +15,7 @@ import { Bookmark, ShieldCheck, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PdfCompressorPage } from './PdfCompressorPage';
 import { ImageCompressorPage } from './ImageCompressorPage';
+import { TextCaseConverterPage } from './TextCaseConverterPage';
 
 interface ToolDetailPageProps {
   tool: ToolItem;
@@ -26,6 +27,9 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ tool }) => {
   }
   if (tool.slug === 'image-compressor') {
     return <ImageCompressorPage tool={tool} />;
+  }
+  if (tool.slug === 'text-case-converter') {
+    return <TextCaseConverterPage tool={tool} />;
   }
 
   const { isFavorite, toggleFavorite } = useApp();
