@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage';
 import { AllToolsPage } from './pages/AllToolsPage';
 import { ToolDetailPage } from './pages/ToolDetailPage';
 import { CategoryPage } from './pages/CategoryPage';
+import { ExamToolsLandingPage } from './pages/ExamToolsLandingPage';
 import {
   AboutPage,
   ContactPage,
@@ -59,20 +60,33 @@ const MainRouter: React.FC = () => {
   if (path === '/copyright') return <CopyrightPage />;
   if (path === '/advertising-policy') return <AdvertisingPolicyPage />;
 
-  // 5. Category Routes (e.g. /pdf-tools, /image-tools)
-  const rawCategory = path.replace(/^\//, '');
+  // 5. Dedicated Exam Tools Ecosystem Landing Route
+  if (
+    path === '/exam-tools' ||
+    path.startsWith('/exam-tools/') ||
+    path === '/exam-eligibility-tools' ||
+    path === '/categories/exam-eligibility-tools'
+  ) {
+    return <ExamToolsLandingPage />;
+  }
+
+  // 6. Category Routes (e.g. /pdf-tools, /categories/image-tools)
+  const cleanCatPath = path.startsWith('/categories/') ? path.replace('/categories/', '') : path.replace(/^\//, '');
   const matchedCategory =
-    CATEGORIES[rawCategory as ToolCategory] ||
+    CATEGORIES[cleanCatPath as ToolCategory] ||
     Object.values(CATEGORIES).find(
       (c) =>
-        c.slug === rawCategory ||
-        c.id === rawCategory ||
-        (rawCategory === 'education-math' && c.id === 'educational-tools') ||
-        (rawCategory === 'qr-barcode' && c.id === 'qr-barcode-tools') ||
-        (rawCategory === 'date-time' && c.id === 'date-time-tools')
+        c.slug === cleanCatPath ||
+        c.id === cleanCatPath ||
+        (cleanCatPath === 'education-math' && c.id === 'educational-tools') ||
+        (cleanCatPath === 'qr-barcode' && c.id === 'qr-barcode-tools') ||
+        (cleanCatPath === 'date-time' && c.id === 'date-time-tools')
     );
 
   if (matchedCategory) {
+    if (matchedCategory.id === 'exam-eligibility-tools') {
+      return <ExamToolsLandingPage />;
+    }
     return <CategoryPage category={matchedCategory} />;
   }
 

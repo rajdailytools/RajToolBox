@@ -14,7 +14,77 @@ export type ToolCategory =
   | 'color-design'
   | 'security-privacy'
   | 'everyday-utilities'
-  | 'finance-calculators';
+  | 'finance-calculators'
+  | 'exam-eligibility-tools'
+  | 'career-job-tools'
+  | 'language-writing-tools'
+  | 'study-test-prep-tools';
+
+export interface AgeRelaxationRule {
+  category: string;
+  relaxationYears: number;
+  description?: string;
+}
+
+export interface ExamMarkingScheme {
+  totalQuestions: number;
+  totalMarks: number;
+  positivePerCorrect: number;
+  negativePerIncorrect: number;
+  durationMinutes: number;
+  sections?: { name: string; questions: number; marks: number }[];
+}
+
+export interface ExamMediaRequirements {
+  widthMm?: number;
+  heightMm?: number;
+  minKb: number;
+  maxKb: number;
+  dimensionText: string;
+  instructions: string;
+}
+
+export interface ExamItem {
+  id: string;
+  slug: string;
+  name: string;
+  shortName: string;
+  region: 'india' | 'international';
+  country: 'India' | 'United States' | 'United Kingdom' | 'Canada' | 'Australia' | 'International';
+  authority: string;
+  authorityCategory:
+    | 'ssc'
+    | 'railway'
+    | 'upsc'
+    | 'banking'
+    | 'defence'
+    | 'teaching'
+    | 'engineering'
+    | 'medical'
+    | 'state-police'
+    | 'us-admissions'
+    | 'uk-admissions'
+    | 'international-english'
+    | 'other';
+  shortDescription: string;
+  officialWebsiteUrl: string;
+  officialNotificationUrl?: string;
+  officialSyllabusUrl?: string;
+  qualificationRequirements: string;
+  minAge: number;
+  maxAge: number;
+  ageReferenceDate: string;
+  ageRelaxation: AgeRelaxationRule[];
+  attemptsRestrictions?: string;
+  markingScheme: ExamMarkingScheme;
+  photoRequirements?: ExamMediaRequirements;
+  signatureRequirements?: ExamMediaRequirements;
+  relatedTools: string[];
+  lastVerifiedDate: string;
+  dataSource: string;
+  notificationYear: string;
+  status: 'verified' | 'partially-verified';
+}
 
 export interface CategoryInfo {
   id: ToolCategory;

@@ -14,7 +14,8 @@ import {
   History,
   RotateCcw,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  Award
 } from 'lucide-react';
 
 export const SearchModal: React.FC = () => {
@@ -296,7 +297,58 @@ export const SearchModal: React.FC = () => {
             </div>
           )}
 
-          {/* 3. Guides Results (Requirement 27: search both Tools and Guides) */}
+          {/* 3. Matched Exams */}
+          {searchResult.exams && searchResult.exams.length > 0 && query.trim() && (
+            <div className="pt-2 border-t border-[#F4F4F5] dark:border-[#27272A]">
+              <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-[#71717A] flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  Supported Examinations ({searchResult.exams.length})
+                </span>
+                <span className="text-[10px] text-[#EC4899] font-semibold">
+                  Exam Finder Pre-filtered
+                </span>
+              </div>
+              <div className="space-y-1.5 mt-1">
+                {searchResult.exams.slice(0, 4).map((exItem) => (
+                  <div
+                    key={exItem.exam.id}
+                    onClick={() => {
+                      setSearchModalOpen(false);
+                      navigate('/categories/exam-eligibility-tools/');
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl cursor-pointer hover:bg-[#F4F4F5] dark:hover:bg-[#202026] border border-transparent hover:border-[#EC4899]/30 transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-[#FACC15]/20 text-[#854D0E] dark:text-[#FACC15] flex items-center justify-center shrink-0">
+                        <Award className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-[#18181B] dark:text-[#F4F4F5] truncate">
+                            {exItem.exam.name}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FAFAFA] dark:bg-[#27272A] text-[#71717A]">
+                            {exItem.exam.country}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#71717A] dark:text-[#A1A1AA] truncate mt-0.5">
+                          {exItem.exam.authority} &middot; Age: {exItem.exam.minAge}–{exItem.exam.maxAge} Yrs
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-xs font-semibold text-[#EC4899] shrink-0 ml-2">
+                      <span>View Tools</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Guides Results (Requirement 27: search both Tools and Guides) */}
           {searchResult.guides.length > 0 && query.trim() && (
             <div className="pt-2 border-t border-[#F4F4F5] dark:border-[#27272A]">
               <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-[#71717A] flex items-center gap-1.5">

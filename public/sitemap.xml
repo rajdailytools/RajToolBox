@@ -276,9 +276,64 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/tools/exam-eligibility-checker/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/age-limit-calculator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/negative-marking-calculator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/exam-photo-signature-resizer/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/in-hand-salary-estimator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/job-qualification-matcher/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/ielts-band-calculator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/reading-time-speed-calculator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/study-timetable-planner/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/tools/exam-accuracy-speed-analyzer/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/pdf-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/pdf-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/image-tools/</loc>
@@ -286,9 +341,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/image-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/text-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/text-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/developer-tools/</loc>
@@ -296,9 +361,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/developer-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/qr-barcode-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/qr-barcode-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/converters/</loc>
@@ -306,9 +381,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/converters/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/seo-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/seo-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/social-media-tools/</loc>
@@ -316,9 +401,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/social-media-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/file-data-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/file-data-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/productivity-tools/</loc>
@@ -326,9 +421,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/productivity-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/date-time-tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/date-time-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/educational-tools/</loc>
@@ -336,9 +441,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/educational-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/color-design/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/color-design/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/security-privacy/</loc>
@@ -346,14 +461,74 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/security-privacy/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/everyday-utilities/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/categories/everyday-utilities/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/finance-calculators/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/finance-calculators/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/exam-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/exam-eligibility-tools/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/exam-eligibility-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/career-job-tools/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/career-job-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/language-writing-tools/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/language-writing-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/study-test-prep-tools/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/categories/study-test-prep-tools/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rajtoolbox.com/tools/</loc>

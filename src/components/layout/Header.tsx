@@ -182,6 +182,18 @@ export const Header: React.FC = () => {
               Converters
             </button>
 
+            <button
+              type="button"
+              onClick={() => handleNav('/exam-tools/')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                currentPath.startsWith('/exam-') || currentPath.includes('exam-eligibility-tools')
+                  ? 'text-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20'
+                  : 'text-[#18181B] dark:text-[#D4D4D8] hover:bg-[#F4F4F5] dark:hover:bg-[#1E1E24]'
+              }`}
+            >
+              Exam Tools
+            </button>
+
             {/* More Categories Dropdown */}
             <div className="relative">
               <button

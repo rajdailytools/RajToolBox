@@ -144,6 +144,42 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
     description: 'Calculate monthly loan EMI repayments with amortization breakdown, and compute bill tips, bill splitting, and sales discounts.',
     iconName: 'Calculator',
     featuredTools: ['loan-emi-calculator', 'tip-discount-calculator']
+  },
+  'exam-eligibility-tools': {
+    id: 'exam-eligibility-tools',
+    slug: 'exam-eligibility-tools',
+    name: 'Exam & Eligibility Tools',
+    shortName: 'Exam & Eligibility',
+    description: 'Check exam eligibility, calculate age limits with category relaxations, calculate negative marks, and resize photos & signatures for official forms.',
+    iconName: 'Award',
+    featuredTools: ['exam-eligibility-checker', 'age-limit-calculator', 'negative-marking-calculator', 'exam-photo-signature-resizer']
+  },
+  'career-job-tools': {
+    id: 'career-job-tools',
+    slug: 'career-job-tools',
+    name: 'Career & Job Tools',
+    shortName: 'Career & Jobs',
+    description: 'Calculate in-hand salaries across pay levels, evaluate job qualifications, match post criteria, and plan career progression transparently.',
+    iconName: 'Briefcase',
+    featuredTools: ['in-hand-salary-estimator', 'job-qualification-matcher']
+  },
+  'language-writing-tools': {
+    id: 'language-writing-tools',
+    slug: 'language-writing-tools',
+    name: 'Language & Writing Tools',
+    shortName: 'Language & Writing',
+    description: 'Calculate IELTS & TOEFL band scores, convert letter casing, count words and characters, and evaluate reading speeds with zero uploads.',
+    iconName: 'PenTool',
+    featuredTools: ['ielts-band-calculator', 'reading-time-speed-calculator', 'text-case-converter', 'word-counter']
+  },
+  'study-test-prep-tools': {
+    id: 'study-test-prep-tools',
+    slug: 'study-test-prep-tools',
+    name: 'Study & Test Preparation Tools',
+    shortName: 'Study & Test Prep',
+    description: 'Plan study timetables, track exam syllabus coverage, analyze solving speed and accuracy curves, and master revision schedules.',
+    iconName: 'BookMarked',
+    featuredTools: ['study-timetable-planner', 'exam-accuracy-speed-analyzer', 'pomodoro-timer']
   }
 };
 

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { TOOLS_REGISTRY } from '../src/data/tools.ts';
 import { CATEGORIES, CATEGORIES_LIST } from '../src/data/categories.ts';
 import { GUIDES_REGISTRY } from '../src/data/guides.ts';
+import { EXAMS_REGISTRY } from '../src/data/exams.ts';
 import { getPdfCompressorStaticHtml } from './pdfCompressorStaticContent.ts';
 import { getImageCompressorStaticHtml } from './imageCompressorStaticContent.ts';
 import { getTextCaseConverterStaticHtml } from './textCaseConverterStaticContent.ts';
@@ -940,7 +941,20 @@ function generateCategoryPages(headAssets: AssetManifest): string[] {
     ensureDir(catDir);
     fs.writeFileSync(path.join(catDir, 'index.html'), html, 'utf8');
 
+    // Also support /categories/<slug>/
+    const subCatDir = path.join(DIST_DIR, 'categories', cat.slug);
+    ensureDir(subCatDir);
+    fs.writeFileSync(path.join(subCatDir, 'index.html'), html, 'utf8');
+
+    if (cat.slug === 'exam-eligibility-tools') {
+      const examToolsDir = path.join(DIST_DIR, 'exam-tools');
+      ensureDir(examToolsDir);
+      fs.writeFileSync(path.join(examToolsDir, 'index.html'), html, 'utf8');
+      generatedRoutes.push('/exam-tools/');
+    }
+
     generatedRoutes.push(`/${cat.slug}/`);
+    generatedRoutes.push(`/categories/${cat.slug}/`);
   }
 
   return generatedRoutes;

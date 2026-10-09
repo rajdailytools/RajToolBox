@@ -1876,6 +1876,348 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       { question: 'Does this calculate tax on discounted price?', answer: 'Yes! In discount mode, sales tax is calculated on the discounted price rather than the original MSRP.' }
     ],
     relatedToolSlugs: ['loan-emi-calculator', 'percentage-calculator']
+  },
+
+  // ==========================================
+  // EXAM & ELIGIBILITY TOOLS
+  // ==========================================
+  {
+    id: 'exam-eligibility-checker',
+    slug: 'exam-eligibility-checker',
+    name: 'Exam Eligibility Checker',
+    category: 'exam-eligibility-tools',
+    shortDescription: 'Check age limits, category relaxations (OBC, SC, ST, PwD), and educational criteria for SSC, Railway, UPSC, Banking & Defence recruitments.',
+    fullDescription: 'Comprehensive examination eligibility evaluator for major Indian recruitments including SSC CGL, RRB NTPC, UPSC Civil Services, IBPS, SBI, and defence entries. Accurately determines whether your date of birth falls within official cut-off bands, calculates reservation age relaxations, and checks qualification status.',
+    iconName: 'Award',
+    keywords: ['exam eligibility checker', 'ssc cgl eligibility', 'upsc age limit checker', 'rrb ntpc eligibility', 'govt exam age calculator', 'obc age relaxation calculator', 'ssc chsl eligibility', 'bank exam eligibility'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Select Examination', instruction: 'Choose your target exam from SSC, Railway, UPSC, Banking, Defence, or Teaching.' },
+      { step: 2, title: 'Enter Date of Birth & Category', instruction: 'Select your date of birth and social reservation category (General, EWS, OBC, SC/ST, PwD, ESM).' },
+      { step: 3, title: 'Check Instant Status', instruction: 'View exact eligibility status, relaxed age limits, and official reference date breakdown.' }
+    ],
+    realLifeExample: {
+      title: 'Evaluating SSC CGL Candidate Born 15-Jan-1996 in OBC Category',
+      inputDescription: 'DOB: 15-01-1996, Category: OBC, Degree: Bachelor of Commerce (Graduate), Ref Date: 01-08-2026.',
+      outputDescription: 'Age on Ref Date: 30 Years 6 Months. Unreserved max age is 32 years, OBC relaxation extends upper limit to 35 years. Status: ELIGIBLE.',
+      details: [
+        { label: 'Exact Age', value: '30y 6m 17d' },
+        { label: 'UR Limit', value: '32 Years' },
+        { label: 'OBC Limit', value: '35 Years' },
+        { label: 'Overall Status', value: 'Eligible' }
+      ]
+    },
+    howItWorks: 'Evaluates candidate birth date against official notification reference dates, adds statutory reservation increments, and verifies educational requirements.',
+    faqs: [
+      { question: 'What is the standard reference date for age calculation?', answer: 'Most central recruitment commissions (like SSC and UPSC) set August 1 of the exam year as the reference date, while Railways typically uses July 1.' },
+      { question: 'Are final year graduate students eligible to apply?', answer: 'For exams like UPSC CSE and SBI PO, final year appearing students can apply provisionally, provided they produce degree proof before mains/interviews.' }
+    ],
+    relatedToolSlugs: ['age-limit-calculator', 'negative-marking-calculator', 'exam-photo-signature-resizer', 'in-hand-salary-estimator']
+  },
+  {
+    id: 'age-limit-calculator',
+    slug: 'age-limit-calculator',
+    name: 'Age Limit Calculator for Exams',
+    category: 'exam-eligibility-tools',
+    shortDescription: 'Calculate your exact age on official recruitment cut-off dates (Years, Months, Days) with category-wise reservation tables.',
+    fullDescription: 'Precision age calculator calibrated for government and competitive job notifications. Calculates your exact age in years, months, and days as of any specific reference date (such as August 1 or July 1), and displays category-wise maximum age limits for General, OBC, SC/ST, and PwD applicants.',
+    iconName: 'Calendar',
+    keywords: ['age limit calculator', 'ssc age calculator', 'exam age calculator', 'upsc age calculator as on august 1', 'railway age calculator as on july 1', 'age calculator for govt jobs', 'calculate age on cutoff date'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Enter Date of Birth', instruction: 'Select your birth date on the interactive calendar picker.' },
+      { step: 2, title: 'Set Cut-Off Date', instruction: 'Choose a quick exam preset (SSC Aug 1, RRB July 1, etc.) or specify a custom reference date.' },
+      { step: 3, title: 'View Age Decomposition', instruction: 'Get exact age in years, months, days, total elapsed days, and category eligibility.' }
+    ],
+    realLifeExample: {
+      title: 'Age Calculation as of August 1, 2026',
+      inputDescription: 'DOB: 12-04-2001, Reference Date: 01-08-2026.',
+      outputDescription: 'Age: 25 Years, 3 Months, 20 Days (9,242 total days). Eligible for all 18-27, 18-30, and 21-32 age bands.',
+      details: [
+        { label: 'Calculated Age', value: '25y 3m 20d' },
+        { label: 'Total Days', value: '9,242' },
+        { label: 'Born On', value: 'Thursday' }
+      ]
+    },
+    howItWorks: 'Calculates the calendar difference between date of birth and cut-off date with month-length normalization and leap-year accounting.',
+    faqs: [
+      { question: 'Why does my age differ from simple year subtraction?', answer: 'Recruitment boards calculate age down to the exact day. Simple subtraction ignores birth months and days, leading to false ineligibility assumptions.' }
+    ],
+    relatedToolSlugs: ['exam-eligibility-checker', 'negative-marking-calculator', 'days-between-dates']
+  },
+  {
+    id: 'negative-marking-calculator',
+    slug: 'negative-marking-calculator',
+    name: 'Negative Marking & Score Calculator',
+    category: 'exam-eligibility-tools',
+    shortDescription: 'Calculate gross score, negative penalty, net marks, and accuracy percentage for SSC, RRB, UPSC, Banking, JEE & NEET exams.',
+    fullDescription: 'Comprehensive marks and negative penalty calculator for competitive tests. Features instant presets for SSC CGL (+2, -0.50), RRB NTPC (+1, -0.33), UPSC Prelims (+2, -0.66), Banking (+1, -0.25), JEE Main (+4, -1), NEET UG (+4, -1), and custom test series with detailed accuracy analytics.',
+    iconName: 'Calculator',
+    keywords: ['negative marking calculator', 'ssc cgl marks calculator', 'neet marks calculator', 'jee negative marking', 'rrb ntpc marks calculator', 'upsc prelims marks calculator', 'exam score calculator', 'negative marks formula'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Choose Exam Scheme', instruction: 'Select your exam preset or configure custom question count, positive marks, and penalty.' },
+      { step: 2, title: 'Enter Attempts & Correct', instruction: 'Enter total attempted questions and correct answers. Incorrect answers calculate automatically.' },
+      { step: 3, title: 'Inspect Net Marks', instruction: 'Review gross positive marks, negative deduction, net score, and accuracy percentage.' }
+    ],
+    realLifeExample: {
+      title: 'SSC CGL Tier-1 Marks Evaluation',
+      inputDescription: 'Total: 100 Qs, Attempted: 85, Correct: 72 (+2 each), Wrong: 13 (-0.5 each).',
+      outputDescription: 'Gross Marks: 144.0. Negative Penalty: -6.50. Net Final Score: 137.50 / 200 (68.75%). Accuracy: 84.7%.',
+      details: [
+        { label: 'Gross Marks', value: '+144.0' },
+        { label: 'Negative Penalty', value: '-6.50' },
+        { label: 'Net Score', value: '137.50 / 200' },
+        { label: 'Accuracy', value: '84.7%' }
+      ]
+    },
+    howItWorks: 'Computes Net Score = (Correct * PositiveMark) - (Incorrect * NegativePenalty) with accuracy rate and percentile metrics.',
+    faqs: [
+      { question: 'What is the 1/3rd negative marking in Railway and UPSC exams?', answer: 'In 1/3rd negative marking, 0.33 marks (or 1/3 of the positive mark) are deducted for every incorrect attempt, meaning 3 wrong answers cancel 1 correct answer.' }
+    ],
+    relatedToolSlugs: ['exam-eligibility-checker', 'age-limit-calculator', 'percentage-calculator']
+  },
+  {
+    id: 'exam-photo-signature-resizer',
+    slug: 'exam-photo-signature-resizer',
+    name: 'Exam Photo & Signature Resizer',
+    category: 'exam-eligibility-tools',
+    shortDescription: 'Resize photos and signatures to exact portal specifications (20–50 KB, 10–20 KB, 3.5×4.5 cm) 100% locally in your browser.',
+    fullDescription: 'Client-side photo and signature formatter tailored for government recruitment portals (SSC, UPSC OTR, RRB Railway, IBPS, SBI, CTET, NTA). Crops to official aspect ratios and compresses file sizes into compliant KB windows with zero file uploads.',
+    iconName: 'Image',
+    keywords: ['exam photo resizer', 'ssc photo resizer 20 to 50 kb', 'ssc signature resizer 10 to 20 kb', 'upsc photo resizer 350x350', 'online photo resizer for govt exam', 'rrb photo compressor', 'passport photo 3.5x4.5 cm online'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Pick Portal Preset', instruction: 'Select SSC, UPSC, RRB, Banking, or NTA portal format for photo or signature.' },
+      { step: 2, title: 'Select Local Image', instruction: 'Upload your photo or signature file from your phone or computer.' },
+      { step: 3, title: 'Download Compliant File', instruction: 'Fine-tune target KB with the slider and download the portal-ready JPG file.' }
+    ],
+    realLifeExample: {
+      title: 'Compressing a 2.4 MB Smartphone Photo for SSC Portal',
+      inputDescription: 'Source Photo: 2.4 MB (3024x4032 px), Target: SSC Photo (20–50 KB, 3.5x4.5 cm).',
+      outputDescription: 'Processed file: 350x450 px at exactly 38.4 KB on pure white background. Meets 100% of SSC upload requirements.',
+      details: [
+        { label: 'Original Size', value: '2.4 MB' },
+        { label: 'Final Size', value: '38.4 KB' },
+        { label: 'Dimensions', value: '350 x 450 px' },
+        { label: 'Compliance', value: '100% Portal Valid' }
+      ]
+    },
+    howItWorks: 'Uses HTML5 Canvas to crop to exact dimensions and runs binary search quality optimization to land within official KB constraints.',
+    faqs: [
+      { question: 'Is my photo uploaded to your server?', answer: 'No! Processing occurs 100% within your local web browser sandbox. No photo or signature is ever uploaded to any server.' },
+      { question: 'Why do exam portals reject signatures?', answer: 'Signatures are rejected if they exceed file size limits, have dark grey backgrounds, or are signed in capital letters.' }
+    ],
+    relatedToolSlugs: ['image-compressor', 'image-resizer', 'exam-eligibility-checker']
+  },
+
+  // ==========================================
+  // CAREER & JOB TOOLS
+  // ==========================================
+  {
+    id: 'in-hand-salary-estimator',
+    slug: 'in-hand-salary-estimator',
+    name: 'In-Hand Salary Estimator (7th CPC)',
+    category: 'career-job-tools',
+    shortDescription: 'Calculate monthly in-hand take-home salary across 7th Central Pay Commission Levels 1 to 14 with DA, HRA, TA & NPS deductions.',
+    fullDescription: 'Comprehensive central government and PSU in-hand salary estimator based on 7th Central Pay Commission rules. Calculates Basic Pay, 50% Dearness Allowance (DA), City-tier House Rent Allowance (X: 30%, Y: 20%, Z: 10%), Transport Allowance (TA), and NPS deductions to compute take-home pay.',
+    iconName: 'Briefcase',
+    keywords: ['in hand salary estimator', '7th cpc salary calculator', 'ssc cgl in hand salary', 'aso css salary', 'ias in hand salary level 10', 'govt employee salary slip calculator', '7th pay commission monthly salary'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Select Pay Level', instruction: 'Choose your Pay Matrix Level from Level 1 (MTS) up to Level 10 (UPSC IAS/IPS).' },
+      { step: 2, title: 'Select City Tier', instruction: 'Pick posting city category: X (Metros 30% HRA), Y (Tier-2 20%), or Z (10%).' },
+      { step: 3, title: 'Review Take-Home Slip', instruction: 'Inspect gross salary, NPS contribution, medical deductions, and net monthly take-home pay.' }
+    ],
+    realLifeExample: {
+      title: 'Level 7 Officer (ASO / Inspector) in Delhi (X City)',
+      inputDescription: 'Level 7 (GP 4600), Basic: ₹44,900, DA: 50%, HRA: 30% (X City), TA: ₹3,600 + DA.',
+      outputDescription: 'Gross Salary: ₹86,220. Deductions (NPS ₹6,735 + CGHS ₹650 + CGEGIS ₹60 + Prof Tax ₹200) = ₹7,645. Net In-Hand: ₹78,575 / month.',
+      details: [
+        { label: 'Basic Pay', value: '₹44,900' },
+        { label: 'Gross Salary', value: '₹86,220' },
+        { label: 'Deductions', value: '₹7,645' },
+        { label: 'Net Take-Home', value: '₹78,575 / mo' }
+      ]
+    },
+    howItWorks: 'Applies standard central government pay formulas: Gross = Basic + DA + HRA + TA, Net = Gross - (10% NPS + CGHS + Taxes).',
+    faqs: [
+      { question: 'What are X, Y, and Z cities in central government postings?', answer: 'X cities are major metropolitan hubs (Delhi, Mumbai, Kolkata, Chennai, Bengaluru, Hyderabad, Pune, Ahmedabad) receiving 30% HRA. Y cities are other state capitals receiving 20%, and Z cities receive 10%.' }
+    ],
+    relatedToolSlugs: ['loan-emi-calculator', 'exam-eligibility-checker', 'job-qualification-matcher']
+  },
+  {
+    id: 'job-qualification-matcher',
+    slug: 'job-qualification-matcher',
+    name: 'Job Qualification Matcher',
+    category: 'career-job-tools',
+    shortDescription: 'Match your degree, percentage, and stream against government and private recruitment eligibility criteria.',
+    fullDescription: 'Interactive educational qualification analyzer that matches your degree (10th, 12th, Diploma, Bachelor, Engineering, Master) against verified recruitment eligibility criteria across major Indian exam authorities.',
+    iconName: 'CheckCircle2',
+    keywords: ['job qualification matcher', 'eligibility for govt jobs after graduation', 'jobs after 12th', 'ssc eligibility by qualification', 'rrb jobs for diploma holders', 'degree qualification checker'],
+    popular: false,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Select Education Level', instruction: 'Choose your highest completed educational milestone.' },
+      { step: 2, title: 'Enter Marks / Stream', instruction: 'Specify your academic aggregate percentage.' },
+      { step: 3, title: 'Explore Matched Roles', instruction: 'Review list of eligible national recruitment examinations.' }
+    ],
+    realLifeExample: {
+      title: 'Matching 3-Year Diploma Holder in Mechanical Engineering',
+      inputDescription: 'Education: 3-Year Diploma, Aggregate: 70%.',
+      outputDescription: 'Matched Exams: RRB Junior Engineer (JE), RRB Assistant Loco Pilot (ALP), SSC JE Mechanical, State Electricity Boards.',
+      details: [
+        { label: 'Education', value: 'Diploma' },
+        { label: 'Matched Opportunities', value: 'RRB JE, SSC JE, ALP' }
+      ]
+    },
+    howItWorks: 'Cross-references academic streams against educational standards defined in official recruitment rules.',
+    faqs: [
+      { question: 'Can distance education degrees apply for central exams?', answer: 'Yes, degrees from UGC/DEB recognized universities are valid for all central recruitment exams.' }
+    ],
+    relatedToolSlugs: ['exam-eligibility-checker', 'in-hand-salary-estimator']
+  },
+
+  // ==========================================
+  // LANGUAGE & WRITING TOOLS
+  // ==========================================
+  {
+    id: 'ielts-band-calculator',
+    slug: 'ielts-band-calculator',
+    name: 'IELTS Band Score Calculator',
+    category: 'language-writing-tools',
+    shortDescription: 'Calculate overall IELTS band score from Listening, Reading, Writing & Speaking with official rounding rules and raw score conversion.',
+    fullDescription: 'Official IELTS band score calculator with accurate half-band rounding algorithm (0.25 rounds up to 0.5, 0.75 rounds up to next whole band). Features practice test raw score conversion (out of 40) for Academic and General Training Reading and Listening, and maps to CEFR and TOEFL equivalents.',
+    iconName: 'Award',
+    keywords: ['ielts band calculator', 'ielts score calculator', 'ielts reading raw score to band', 'ielts listening band calculator', 'ielts overall band score calculation', 'cefr to ielts conversion', 'toefl to ielts score equivalent'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Set Skill Scores', instruction: 'Adjust sliders for Listening, Reading, Writing, and Speaking from 0 to 9.' },
+      { step: 2, title: 'View Overall Band', instruction: 'Inspect the calculated overall band score with official rounding logic.' },
+      { step: 3, title: 'Check CEFR & TOEFL', instruction: 'View mapped CEFR proficiency level (B2, C1, C2) and TOEFL iBT equivalents.' }
+    ],
+    realLifeExample: {
+      title: 'Calculating Overall Band for L: 7.5, R: 7.0, W: 6.5, S: 7.0',
+      inputDescription: 'Listening: 7.5, Reading: 7.0, Writing: 6.5, Speaking: 7.0. Average: 7.0.',
+      outputDescription: 'Overall Band Score: 7.0 (C1 Advanced). Matches university admission requirements worldwide.',
+      details: [
+        { label: 'Exact Average', value: '7.000' },
+        { label: 'Overall Band', value: '7.0' },
+        { label: 'CEFR Level', value: 'C1' },
+        { label: 'TOEFL Equiv', value: '94 – 114' }
+      ]
+    },
+    howItWorks: 'Applies official British Council / IDP rounding rule: averages ending in .25 round up to .5; averages ending in .75 round up to the next full band.',
+    faqs: [
+      { question: 'What is the official IELTS rounding rule for .25 and .75?', answer: 'If the average of the 4 sections ends in .25, it rounds up to the next half band (.5). If it ends in .75, it rounds up to the next whole band.' }
+    ],
+    relatedToolSlugs: ['reading-time-speed-calculator', 'word-counter', 'text-case-converter']
+  },
+  {
+    id: 'reading-time-speed-calculator',
+    slug: 'reading-time-speed-calculator',
+    name: 'Reading Speed & WPM Calculator',
+    category: 'language-writing-tools',
+    shortDescription: 'Measure your words-per-minute (WPM) reading speed and estimate reading times for exam comprehension passages.',
+    fullDescription: 'Interactive speed-reading timer and analyzer for competitive exams and language tests (IELTS, TOEFL, SAT, UPSC). Accurately calculates Words Per Minute (WPM), compares against benchmarks, and assists in pacing long editorial passages.',
+    iconName: 'PenTool',
+    keywords: ['reading speed calculator', 'wpm calculator', 'words per minute reading test', 'ielts reading speed', 'speed reading test online', 'estimate reading time'],
+    popular: false,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Paste or Use Text', instruction: 'Read the sample editorial passage or paste your own study text.' },
+      { step: 2, title: 'Start & Stop Timer', instruction: 'Click "Start Timer", read at normal comprehension pace, and click "I Finished".' },
+      { step: 3, title: 'Review Speed Metrics', instruction: 'Check your WPM rating against exam aspirant target benchmarks.' }
+    ],
+    realLifeExample: {
+      title: 'Measuring Reading Speed for a 350-Word Editorial',
+      inputDescription: 'Passage: 350 words, Reading Duration: 70 seconds.',
+      outputDescription: 'Reading Speed: 300 WPM. Reaches the target speed required for competitive reading comprehension.',
+      details: [
+        { label: 'Words Read', value: '350' },
+        { label: 'Duration', value: '70s' },
+        { label: 'Speed', value: '300 WPM' }
+      ]
+    },
+    howItWorks: 'Computes WPM = (WordCount / ElapsedSeconds) * 60 with standard comprehension benchmarks.',
+    faqs: [
+      { question: 'What is a good reading speed for competitive exams?', answer: 'Most exam toppers read between 280 and 350 words per minute to complete comprehension sections comfortably within time limits.' }
+    ],
+    relatedToolSlugs: ['word-counter', 'ielts-band-calculator', 'text-cleaner']
+  },
+
+  // ==========================================
+  // STUDY & TEST PREPARATION TOOLS
+  // ==========================================
+  {
+    id: 'study-timetable-planner',
+    slug: 'study-timetable-planner',
+    name: 'Study Timetable & Revision Planner',
+    category: 'study-test-prep-tools',
+    shortDescription: 'Generate personalized daily study timetables with countdown trackers, revision cycles, and weak subject focus slots.',
+    fullDescription: 'Structured daily study routine generator for competitive exam aspirants. Calculates days and weeks remaining until your target exam, distributes study hours across core subjects, prioritizes weak areas in peak-focus morning slots, and formats exportable revision routines.',
+    iconName: 'BookMarked',
+    keywords: ['study timetable planner', 'exam study planner', 'revision schedule generator', 'daily study routine for ssc cgl', 'upsc study timetable generator', 'exam preparation planner'],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Enter Exam Details', instruction: 'Input your target exam name and examination date.' },
+      { step: 2, title: 'Set Hours & Weak Areas', instruction: 'Choose daily study commitment and specify your primary weak subject.' },
+      { step: 3, title: 'Generate Routine', instruction: 'Get structured hourly slots covering deep focus, practice, reading, and mock review.' }
+    ],
+    realLifeExample: {
+      title: 'Study Routine for SSC CGL with 150 Days Remaining',
+      inputDescription: 'Exam: SSC CGL 2026, Daily Target: 6 Hours, Weak Area: Quantitative Aptitude.',
+      outputDescription: 'Generated daily routine allocating morning focus to Math concepts, afternoon to GK/English, evening to timed mock drills.',
+      details: [
+        { label: 'Days Remaining', value: '150 Days' },
+        { label: 'Total Study Hours', value: '900 Hours' },
+        { label: 'Peak Slot', value: 'Math Deep Work' }
+      ]
+    },
+    howItWorks: 'Structures daily timeboxing aligned with cognitive alertness cycles, interleaving practice and recall.',
+    faqs: [
+      { question: 'How many hours should I study daily for competitive exams?', answer: 'Quality and consistency matter more than sheer hours. 6 to 8 hours of focused, distraction-free study is optimal for most candidates.' }
+    ],
+    relatedToolSlugs: ['exam-accuracy-speed-analyzer', 'pomodoro-timer', 'stopwatch-timer']
+  },
+  {
+    id: 'exam-accuracy-speed-analyzer',
+    slug: 'exam-accuracy-speed-analyzer',
+    name: 'Exam Accuracy & Speed Analyzer',
+    category: 'study-test-prep-tools',
+    shortDescription: 'Analyze question-solving pacing, seconds per question, and accuracy curves to improve mock test scores.',
+    fullDescription: 'Mock test performance and pacing analyzer. Evaluates your solving speed in seconds per question, questions per hour pacing, and accuracy percentages to help competitive aspirants eliminate rushing errors and optimize time management.',
+    iconName: 'Target',
+    keywords: ['exam accuracy calculator', 'mock test speed analyzer', 'seconds per question calculator', 'test solving speed', 'exam time management tool', 'mock test accuracy percentage'],
+    popular: false,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Enter Test Data', instruction: 'Input total questions, attempted questions, and correct answers from your mock test.' },
+      { step: 2, title: 'Set Time Taken', instruction: 'Enter the session duration in minutes.' },
+      { step: 3, title: 'Analyze Metrics', instruction: 'Review accuracy percentage, average seconds per question, and pacing recommendations.' }
+    ],
+    realLifeExample: {
+      title: 'Mock Test Speed & Accuracy Review',
+      inputDescription: 'Total: 100 Qs, Attempted: 80, Correct: 68, Time: 60 Minutes.',
+      outputDescription: 'Accuracy: 85.0%, Average Time per Question: 45 seconds (80 Qs/hr). Recommended: Reduce calculation time on math to reach 90+ attempts.',
+      details: [
+        { label: 'Accuracy', value: '85.0%' },
+        { label: 'Speed', value: '45s / question' },
+        { label: 'Hourly Pacing', value: '80 Q/hr' }
+      ]
+    },
+    howItWorks: 'Calculates accuracy rates and pacing ratios to identify whether score bottlenecks stem from conceptual gaps or time allocation.',
+    faqs: [
+      { question: 'What is an ideal accuracy rate in competitive exams?', answer: 'Aim for 85% to 90% accuracy. Rushing to achieve more attempts with accuracy dropping below 75% usually lowers net scores due to negative marking.' }
+    ],
+    relatedToolSlugs: ['study-timetable-planner', 'negative-marking-calculator', 'pomodoro-timer']
   }
 ];
 

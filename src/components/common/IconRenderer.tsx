@@ -48,7 +48,13 @@ import {
   Percent,
   Divide,
   Calculator,
-  Wrench
+  Wrench,
+  Award,
+  Briefcase,
+  PenTool,
+  BookMarked,
+  CheckCircle2,
+  Languages
 } from 'lucide-react';
 
 interface IconRendererProps {
@@ -105,7 +111,13 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Percent,
   Divide,
   Calculator,
-  Wrench
+  Wrench,
+  Award,
+  Briefcase,
+  PenTool,
+  BookMarked,
+  CheckCircle2,
+  Languages
 };
 
 export const IconRenderer: React.FC<IconRendererProps> = ({ name, className = 'w-5 h-5' }) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { TOOLS_REGISTRY, POPULAR_TOOLS, FEATURED_TOOLS } from '../data/tools';
+import { TOOLS_REGISTRY, POPULAR_TOOLS, FEATURED_TOOLS, getToolsByCategory } from '../data/tools';
 import { CATEGORIES_LIST } from '../data/categories';
 import { ToolCard } from '../components/ui/ToolCard';
 import { IconRenderer } from '../components/common/IconRenderer';
@@ -170,30 +170,38 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {CATEGORIES_LIST.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => navigate(`/${cat.slug}/`)}
-              className="p-5 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-left hover:border-[#EC4899] hover:shadow-xs transition-all group flex flex-col justify-between"
-            >
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                  <IconRenderer name={cat.iconName} className="w-5 h-5" />
+          {CATEGORIES_LIST.map((cat) => {
+            const toolCount = getToolsByCategory(cat.id).length;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => navigate(`/${cat.slug}/`)}
+                className="p-5 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-left hover:border-[#EC4899] hover:shadow-xs transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899] flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <IconRenderer name={cat.iconName} className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FAFAFA] dark:bg-[#202026] text-[#71717A] dark:text-[#A1A1AA] border border-[#E4E4E7] dark:border-[#27272A] group-hover:border-[#EC4899]/40 group-hover:text-[#EC4899] transition-colors">
+                      {toolCount} {toolCount === 1 ? 'Tool' : 'Tools'}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] group-hover:text-[#EC4899] transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-[11px] text-[#71717A] dark:text-[#A1A1AA] mt-1 line-clamp-2 leading-relaxed">
+                    {cat.description}
+                  </p>
                 </div>
-                <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] group-hover:text-[#EC4899] transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-[11px] text-[#71717A] dark:text-[#A1A1AA] mt-1 line-clamp-2 leading-relaxed">
-                  {cat.description}
-                </p>
-              </div>
 
-              <div className="mt-4 pt-2 border-t border-[#F4F4F5] dark:border-[#27272A] flex items-center justify-between text-[11px] font-semibold text-[#EC4899]">
-                <span>Browse Tools</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </button>
-          ))}
+                <div className="mt-4 pt-2 border-t border-[#F4F4F5] dark:border-[#27272A] flex items-center justify-between text-[11px] font-semibold text-[#EC4899]">
+                  <span>Browse {toolCount} Tools</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 

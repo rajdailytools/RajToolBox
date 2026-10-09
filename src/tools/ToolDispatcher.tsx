@@ -3,6 +3,16 @@ import { ToolItem } from '../types';
 import { PdfCompressorTool } from './components/PdfCompressorTool';
 import { ImageCompressorTool } from './components/ImageCompressorTool';
 import { TextCaseConverterTool } from './components/TextCaseConverterTool';
+import { ExamEligibilityCheckerTool } from './components/ExamEligibilityCheckerTool';
+import { AgeLimitCalculatorTool } from './components/AgeLimitCalculatorTool';
+import { NegativeMarkingCalculatorTool } from './components/NegativeMarkingCalculatorTool';
+import { ExamPhotoSignatureResizerTool } from './components/ExamPhotoSignatureResizerTool';
+import { InHandSalaryEstimatorTool } from './components/InHandSalaryEstimatorTool';
+import { JobQualificationMatcherTool } from './components/JobQualificationMatcherTool';
+import { IeltsBandCalculatorTool } from './components/IeltsBandCalculatorTool';
+import { ReadingSpeedCalculatorTool } from './components/ReadingSpeedCalculatorTool';
+import { StudyTimetablePlannerTool } from './components/StudyTimetablePlannerTool';
+import { ExamAccuracySpeedAnalyzerTool } from './components/ExamAccuracySpeedAnalyzerTool';
 import {
   PdfMergerComponent,
   PdfCompressorComponent,
@@ -208,6 +218,34 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
       return <LoanEmiCalculatorComponent />;
     case 'tip-discount-calculator':
       return <TipDiscountCalculatorComponent />;
+
+    // Exam & Eligibility Tools
+    case 'exam-eligibility-checker':
+      return <ExamEligibilityCheckerTool />;
+    case 'age-limit-calculator':
+      return <AgeLimitCalculatorTool />;
+    case 'negative-marking-calculator':
+      return <NegativeMarkingCalculatorTool />;
+    case 'exam-photo-signature-resizer':
+      return <ExamPhotoSignatureResizerTool />;
+
+    // Career & Job Tools
+    case 'in-hand-salary-estimator':
+      return <InHandSalaryEstimatorTool />;
+    case 'job-qualification-matcher':
+      return <JobQualificationMatcherTool />;
+
+    // Language & Writing Tools
+    case 'ielts-band-calculator':
+      return <IeltsBandCalculatorTool />;
+    case 'reading-time-speed-calculator':
+      return <ReadingSpeedCalculatorTool />;
+
+    // Study & Test Preparation Tools
+    case 'study-timetable-planner':
+      return <StudyTimetablePlannerTool />;
+    case 'exam-accuracy-speed-analyzer':
+      return <ExamAccuracySpeedAnalyzerTool />;
 
     default:
       return <UniversalUnitConverterComponent />;
