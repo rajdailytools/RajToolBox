@@ -694,10 +694,21 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     slug: 'json-formatter',
     name: 'JSON Formatter & Validator',
     category: 'developer-tools',
-    shortDescription: 'Beautify, validate, format, and minify JSON data with clear syntax error detection.',
-    fullDescription: 'Inspect and format messy JSON strings into clean, readable structures with 2-space or 4-space indentation. Validates JSON compliance and points directly to the line and character where syntax errors occur.',
+    shortDescription: 'Beautify, validate, format, and minify JSON data with clear syntax error detection and tree view.',
+    fullDescription: 'Inspect and format messy JSON strings into clean, readable structures with 2-space or 4-space indentation. Validates RFC 8259 compliance, detects syntax error locations, explores nested objects in an interactive tree view, and runs semantic JSON comparisons.',
     iconName: 'FileCode',
-    keywords: ['json formatter', 'json validator', 'beautify json', 'json prettifier', 'minify json'],
+    keywords: [
+      'json formatter',
+      'json validator',
+      'beautify json',
+      'json prettifier',
+      'minify json',
+      'json viewer',
+      'json compare',
+      'json schema validator',
+      'json syntax checker',
+      'json editor online'
+    ],
     popular: true,
     featured: true,
     howToSteps: [
@@ -715,12 +726,12 @@ export const TOOLS_REGISTRY: ToolItem[] = [
         { label: 'Formatted', value: 'Multi-line indented structure with syntax clarity' }
       ]
     },
-    howItWorks: 'Leverages JSON.parse() with try-catch diagnostic parsing and JSON.stringify(data, null, indent) formatting.',
+    howItWorks: 'Leverages RFC 8259 parser with diagnostic line/column error detection, AST traversal, and zero server network requests.',
     faqs: [
-      { question: 'Can it detect missing commas or trailing commas?', answer: 'Yes, if invalid JSON is provided, the exact syntax error reason is highlighted with line numbers.' },
-      { question: 'Is my data secure?', answer: 'Completely. Processing is 100% browser-based; no payload is ever transmitted.' }
+      { question: 'Can it detect missing commas or trailing commas?', answer: 'Yes, if invalid JSON is provided, the exact syntax error reason is highlighted with line numbers and caret indicators.' },
+      { question: 'Is my data secure?', answer: 'Completely. Processing is 100% browser-based; no payload is ever transmitted to any server.' }
     ],
-    relatedToolSlugs: ['base64-codec', 'jwt-decoder', 'csv-to-json', 'html-css-minifier']
+    relatedToolSlugs: ['base64-codec', 'jwt-decoder', 'csv-to-json', 'json-to-csv']
   },
   {
     id: 'base64-codec',
@@ -2225,6 +2236,9 @@ export const POPULAR_TOOLS = TOOLS_REGISTRY.filter((t) => t.popular);
 export const FEATURED_TOOLS = TOOLS_REGISTRY.filter((t) => t.featured);
 
 export function getToolBySlug(slug: string): ToolItem | undefined {
+  if (slug === 'json-formatter-validator') {
+    return TOOLS_REGISTRY.find((t) => t.slug === 'json-formatter');
+  }
   return TOOLS_REGISTRY.find((t) => t.slug === slug || t.id === slug);
 }
 

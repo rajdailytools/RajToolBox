@@ -8,6 +8,7 @@ import { EXAMS_REGISTRY } from '../src/data/exams.ts';
 import { getPdfCompressorStaticHtml } from './pdfCompressorStaticContent.ts';
 import { getImageCompressorStaticHtml } from './imageCompressorStaticContent.ts';
 import { getTextCaseConverterStaticHtml } from './textCaseConverterStaticContent.ts';
+import { getJsonFormatterStaticHtml } from './jsonFormatterStaticContent.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -658,6 +659,8 @@ function generateToolPages(headAssets: AssetManifest): string[] {
         ? getImageCompressorStaticHtml()
         : tool.slug === 'text-case-converter'
         ? getTextCaseConverterStaticHtml()
+        : tool.slug === 'json-formatter'
+        ? getJsonFormatterStaticHtml()
         : `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb Navigation -->

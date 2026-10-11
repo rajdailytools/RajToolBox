@@ -47,6 +47,7 @@ import {
   RegexTesterComponent,
   ColorConverterComponent
 } from './components/DeveloperTools';
+import { JsonFormatterWorkspace } from './components/JsonFormatterWorkspace';
 import { QrCodeComponent, BarcodeComponent } from './components/QrBarcodeTools';
 import {
   UniversalUnitConverterComponent,
@@ -130,7 +131,8 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
 
     // Developer
     case 'json-formatter':
-      return <JsonFormatterComponent />;
+    case 'json-formatter-validator':
+      return <JsonFormatterWorkspace />;
     case 'base64-codec':
       return <Base64Component />;
     case 'url-codec':
