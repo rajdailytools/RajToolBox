@@ -153,7 +153,7 @@ export default function App() {
     <AppProvider>
       <div className="flex flex-col min-h-screen bg-[#FFFDF7] dark:bg-[#0F0F12] text-[#18181B] dark:text-[#F4F4F5]">
         <Header />
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           <ErrorBoundary>
             <MainRouter />
           </ErrorBoundary>

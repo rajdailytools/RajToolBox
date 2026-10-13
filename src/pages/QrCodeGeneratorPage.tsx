@@ -5,6 +5,7 @@ import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { QrCodeGeneratorWorkspace } from '../tools/components/QrCodeGeneratorWorkspace';
 import { AuthorBox } from '../components/ui/AuthorBox';
 import { RelatedTools } from '../components/ui/RelatedTools';
+import { RajToolBoxLogo } from '../components/RajToolBoxLogo';
 import { useApp } from '../context/AppContext';
 import {
   QrCode,
@@ -69,8 +70,14 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
     canonical.setAttribute('href', 'https://rajtoolbox.com/tools/qr-code-generator/');
   }, [tool]);
 
+  const canonicalUrl = 'https://rajtoolbox.com/tools/qr-code-generator/';
+  const shareMessage = `Try the RajToolBox QR Code Generator to create and customize QR codes: ${canonicalUrl}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+
+  const [toolLinkCopied, setToolLinkCopied] = useState<boolean>(false);
+
   const copyPageLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(canonicalUrl);
     setLinkCopied(true);
     showToast('Tool link copied to clipboard!', 'success');
     setTimeout(() => setLinkCopied(false), 2500);
@@ -81,14 +88,42 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
       try {
         await navigator.share({
           title: 'QR Code Generator – RajToolBox',
-          text: 'Generate custom high-resolution QR codes for websites, plain text, Wi-Fi, vCard contacts, and payments 100% locally in your browser.',
-          url: window.location.href
+          text: 'Try the RajToolBox QR Code Generator to create and customize QR codes:',
+          url: canonicalUrl
         });
-      } catch {
-        copyPageLink();
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          copyPageLink();
+        }
       }
     } else {
       copyPageLink();
+    }
+  };
+
+  const handleCopyToolLink = () => {
+    navigator.clipboard.writeText(canonicalUrl);
+    setToolLinkCopied(true);
+    showToast('Tool link copied to clipboard!', 'success');
+    setTimeout(() => setToolLinkCopied(false), 2500);
+  };
+
+  const handleShareTool = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'QR Code Generator – RajToolBox',
+          text: 'Try the RajToolBox QR Code Generator to create and customize QR codes:',
+          url: canonicalUrl
+        });
+        showToast('Tool link shared successfully!', 'success');
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          handleCopyToolLink();
+        }
+      }
+    } else {
+      handleCopyToolLink();
     }
   };
 
@@ -201,7 +236,7 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-150">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 min-w-0 w-full animate-in fade-in duration-150">
       {/* 1. TOP BREADCRUMB */}
       <Breadcrumb
         categorySlug={category?.slug || tool.category}
@@ -210,8 +245,8 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
       />
 
       {/* 2. PAGE HEADER & TITLE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 min-w-0 w-full">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-2 text-xs text-[#71717A] dark:text-[#A1A1AA] flex-wrap">
             <span className="font-semibold text-[#EC4899]">
               {category?.name || 'QR & Barcode Tools'}
@@ -232,17 +267,17 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#18181B] dark:text-[#F4F4F5]">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#18181B] dark:text-[#F4F4F5] break-words">
             QR Code Generator – Free Online QR Code Maker
           </h1>
 
-          <p className="text-sm sm:text-base text-[#71717A] dark:text-[#A1A1AA] mt-2 max-w-3xl leading-relaxed">
+          <p className="text-sm sm:text-base text-[#71717A] dark:text-[#A1A1AA] mt-2 max-w-3xl leading-relaxed break-words">
             Create custom high-resolution QR codes for websites, plain text, Wi-Fi networks, vCard contacts, UPI payments, emails, and phone calls. Customize colors, embed your logo with High Error Correction, and download crisp PNG or scalable vector SVG for print and digital use.
           </p>
         </div>
 
         {/* Favorite & Share Buttons */}
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex items-center gap-2 flex-wrap">
           <button
             onClick={() => toggleFavorite(tool.slug)}
             className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
@@ -268,7 +303,7 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
       </div>
 
       {/* 3. INTERACTIVE TOOL WORKSPACE (Immediately visible and accessible) */}
-      <div className="bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] rounded-3xl shadow-sm p-5 sm:p-8 mb-12">
+      <div className="bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] rounded-2xl sm:rounded-3xl shadow-sm p-3.5 sm:p-6 lg:p-8 mb-10 sm:mb-12 min-w-0 w-full max-w-full">
         <QrCodeGeneratorWorkspace />
       </div>
 
@@ -284,46 +319,46 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </div>
 
         {/* Flowchart A: Creating a Scannable QR Code */}
-        <div className="p-6 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3">
+        <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-4 min-w-0 w-full">
+          <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3 flex-wrap gap-2">
             <h3 className="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold">
+              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold shrink-0">
                 A
               </span>
-              Flowchart: Creating a Verified, Scannable QR Code
+              <span>Flowchart: Creating a Verified, Scannable QR Code</span>
             </h3>
-            <span className="text-[11px] font-semibold text-[#16A34A] bg-[#DCFCE7] dark:bg-[#14532D]/40 px-2.5 py-0.5 rounded-full">
+            <span className="text-[11px] font-semibold text-[#16A34A] bg-[#DCFCE7] dark:bg-[#14532D]/40 px-2.5 py-0.5 rounded-full shrink-0">
               Standard Pipeline
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2 text-center text-xs">
-            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 text-center text-xs min-w-0 w-full">
+            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#EC4899] font-bold mb-1">STEP 1</span>
               <strong className="text-[#18181B] dark:text-white text-xs">Pick QR Type</strong>
               <span className="text-[10px] text-[#71717A] mt-0.5">URL, Wi-Fi, vCard, etc.</span>
             </div>
-            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center">
+            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#EC4899] font-bold mb-1">STEP 2</span>
               <strong className="text-[#18181B] dark:text-white text-xs">Input &amp; Validate</strong>
               <span className="text-[10px] text-[#71717A] mt-0.5">Syntax &amp; escape checks</span>
             </div>
-            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center">
+            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#EC4899] font-bold mb-1">STEP 3</span>
               <strong className="text-[#18181B] dark:text-white text-xs">Design &amp; Logo</strong>
               <span className="text-[10px] text-[#71717A] mt-0.5">High contrast &amp; Level H</span>
             </div>
-            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center">
+            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#EC4899] font-bold mb-1">STEP 4</span>
               <strong className="text-[#18181B] dark:text-white text-xs">Verify Payload</strong>
               <span className="text-[10px] text-[#71717A] mt-0.5">Inspect decoded text</span>
             </div>
-            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center">
+            <div className="p-3 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#EC4899] font-bold mb-1">STEP 5</span>
               <strong className="text-[#18181B] dark:text-white text-xs">Download File</strong>
               <span className="text-[10px] text-[#71717A] mt-0.5">PNG (web) or SVG (print)</span>
             </div>
-            <div className="p-3 rounded-xl bg-[#F0FDF4] dark:bg-[#14532D]/20 border border-[#86EFAC] dark:border-[#14532D] flex flex-col justify-center items-center">
+            <div className="p-3 rounded-xl bg-[#F0FDF4] dark:bg-[#14532D]/20 border border-[#86EFAC] dark:border-[#14532D] flex flex-col justify-center items-center min-w-0 break-words">
               <span className="text-[10px] font-mono text-[#16A34A] font-bold mb-1">STEP 6</span>
               <strong className="text-[#16A34A] dark:text-[#4ADE80] text-xs">Phone Camera Test</strong>
               <span className="text-[10px] text-[#16A34A] dark:text-[#4ADE80] mt-0.5">Test before mass printing</span>
@@ -332,37 +367,37 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </div>
 
         {/* Flowchart B & C Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0 w-full">
           {/* Flowchart B: Troubleshooting a QR That Will Not Scan */}
-          <div className="p-6 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-3">
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-3 min-w-0 w-full">
             <h3 className="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold">
+              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold shrink-0">
                 B
               </span>
-              Troubleshooting a QR Code That Fails to Scan
+              <span>Troubleshooting a QR Code That Fails to Scan</span>
             </h3>
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2">
-                <span className="font-bold text-[#EC4899]">1. Check Contrast:</span>
-                <span className="text-[#71717A] dark:text-[#A1A1AA]">
+            <div className="space-y-2 text-xs min-w-0">
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2 min-w-0">
+                <span className="font-bold text-[#EC4899] shrink-0">1. Contrast:</span>
+                <span className="text-[#71717A] dark:text-[#A1A1AA] break-words">
                   Are dots dark and background light? Avoid white-on-black or pale pastels.
                 </span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2">
-                <span className="font-bold text-[#EC4899]">2. Inspect Quiet Zone:</span>
-                <span className="text-[#71717A] dark:text-[#A1A1AA]">
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2 min-w-0">
+                <span className="font-bold text-[#EC4899] shrink-0">2. Quiet Zone:</span>
+                <span className="text-[#71717A] dark:text-[#A1A1AA] break-words">
                   Maintain at least 4 modules of uninterrupted white space around outer edges.
                 </span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2">
-                <span className="font-bold text-[#EC4899]">3. Check Center Logo:</span>
-                <span className="text-[#71717A] dark:text-[#A1A1AA]">
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2 min-w-0">
+                <span className="font-bold text-[#EC4899] shrink-0">3. Center Logo:</span>
+                <span className="text-[#71717A] dark:text-[#A1A1AA] break-words">
                   Does logo cover more than 25%? Keep logo size under 22% with Error Correction H.
                 </span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2">
-                <span className="font-bold text-[#EC4899]">4. Test Physical Size:</span>
-                <span className="text-[#71717A] dark:text-[#A1A1AA]">
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start gap-2 min-w-0">
+                <span className="font-bold text-[#EC4899] shrink-0">4. Print Size:</span>
+                <span className="text-[#71717A] dark:text-[#A1A1AA] break-words">
                   Print width must equal at least 1/10th of expected reading distance.
                 </span>
               </div>
@@ -370,41 +405,41 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
           </div>
 
           {/* Flowchart C: Choosing the Right QR Type */}
-          <div className="p-6 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-3">
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-3 min-w-0 w-full">
             <h3 className="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold">
+              <span className="w-6 h-6 rounded-lg bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-bold shrink-0">
                 C
               </span>
-              Choosing the Optimal QR Code Type
+              <span>Choosing the Optimal QR Code Type</span>
             </h3>
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start justify-between">
-                <div>
-                  <strong className="text-[#18181B] dark:text-white block">Goal: Open a webpage or app</strong>
-                  <span className="text-[#71717A] dark:text-[#A1A1AA]">Requires active device internet</span>
+            <div className="space-y-2 text-xs min-w-0">
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-[#18181B] dark:text-white block truncate">Goal: Open a webpage or app</strong>
+                  <span className="text-[#71717A] dark:text-[#A1A1AA] text-[11px] block truncate">Requires active device internet</span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-[#FCE7F3] text-[#EC4899] font-bold text-[11px]">URL QR</span>
+                <span className="px-2 py-0.5 rounded bg-[#FCE7F3] text-[#EC4899] font-bold text-[11px] shrink-0">URL QR</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start justify-between">
-                <div>
-                  <strong className="text-[#18181B] dark:text-white block">Goal: Share guest Wi-Fi credentials</strong>
-                  <span className="text-[#71717A] dark:text-[#A1A1AA]">One-tap network connection</span>
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-[#18181B] dark:text-white block truncate">Goal: Share guest Wi-Fi</strong>
+                  <span className="text-[#71717A] dark:text-[#A1A1AA] text-[11px] block truncate">One-tap network connection</span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-[#DCFCE7] text-[#16A34A] font-bold text-[11px]">Wi-Fi QR</span>
+                <span className="px-2 py-0.5 rounded bg-[#DCFCE7] text-[#16A34A] font-bold text-[11px] shrink-0">Wi-Fi QR</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start justify-between">
-                <div>
-                  <strong className="text-[#18181B] dark:text-white block">Goal: Share digital business card</strong>
-                  <span className="text-[#71717A] dark:text-[#A1A1AA]">Saves directly into phone contacts</span>
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-[#18181B] dark:text-white block truncate">Goal: Digital business card</strong>
+                  <span className="text-[#71717A] dark:text-[#A1A1AA] text-[11px] block truncate">Saves directly into contacts</span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB] font-bold text-[11px]">vCard QR</span>
+                <span className="px-2 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB] font-bold text-[11px] shrink-0">vCard QR</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-start justify-between">
-                <div>
-                  <strong className="text-[#18181B] dark:text-white block">Goal: Collect payment in India</strong>
-                  <span className="text-[#71717A] dark:text-[#A1A1AA]">Opens Google Pay, PhonePe, Paytm</span>
+              <div className="p-2.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-[#18181B] dark:text-white block truncate">Goal: Collect payment (India)</strong>
+                  <span className="text-[#71717A] dark:text-[#A1A1AA] text-[11px] block truncate">Opens GPay, PhonePe, Paytm</span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-[#FEF3C7] text-[#D97706] font-bold text-[11px]">UPI QR</span>
+                <span className="px-2 py-0.5 rounded bg-[#FEF3C7] text-[#D97706] font-bold text-[11px] shrink-0">UPI QR</span>
               </div>
             </div>
           </div>
@@ -504,16 +539,16 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: Real QR Code Examples Table */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2">
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2 break-words">
             Real QR Code Examples &amp; Standard Payload Specifications
           </h2>
           <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mb-4">
             Demonstrating standard payloads, encoded formats, smartphone device actions, and real-world limitations. All examples use fictional test data.
           </p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto w-full max-w-full -mx-1 px-1 sm:mx-0 sm:px-0">
+            <table className="w-full text-left text-xs border-collapse min-w-[580px]">
               <thead>
                 <tr className="border-b border-[#E4E4E7] dark:border-[#27272A] text-[#18181B] dark:text-white">
                   <th className="py-2.5 px-3 font-bold">QR Type</th>
@@ -526,56 +561,56 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
               <tbody className="divide-y divide-[#E4E4E7] dark:divide-[#27272A] text-[#71717A] dark:text-[#A1A1AA]">
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Website URL</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">https://example.com/menu</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">https://example.com/menu</td>
                   <td className="py-3 px-3">Opens web browser to the URL</td>
                   <td className="py-3 px-3">Restaurant menus, product packaging</td>
                   <td className="py-3 px-3">Requires active internet connection</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Wi-Fi Network</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">WIFI:T:WPA;S:Guest;P:Secret123;;</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">WIFI:T:WPA;S:Guest;P:Secret123;;</td>
                   <td className="py-3 px-3">Prompts "Join Wi-Fi Network"</td>
                   <td className="py-3 px-3">Cafes, hotels, home guest rooms</td>
                   <td className="py-3 px-3">Device must support Wi-Fi hardware</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Contact (vCard)</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">BEGIN:VCARD\nFN:Raj Sharma...</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">BEGIN:VCARD\nFN:Raj Sharma...</td>
                   <td className="py-3 px-3">Prompts "Add to Contacts"</td>
                   <td className="py-3 px-3">Business cards, conference badges</td>
                   <td className="py-3 px-3">Dense matrix requires high print quality</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">UPI Payment</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">upi://pay?pa=shop@upi&amp;pn=Shop</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">upi://pay?pa=shop@upi&amp;pn=Shop</td>
                   <td className="py-3 px-3">Opens GPay, PhonePe, Paytm</td>
                   <td className="py-3 px-3">Indian retail checkouts, billing</td>
                   <td className="py-3 px-3">Requires installed Indian UPI app</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Phone Call</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">tel:+919876543210</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">tel:+919876543210</td>
                   <td className="py-3 px-3">Opens phone dialer with number</td>
                   <td className="py-3 px-3">Customer support posters, taxis</td>
                   <td className="py-3 px-3">Does not dial automatically without user tap</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Email Draft</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">mailto:help@example.com?sub=Hi</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">mailto:help@example.com?sub=Hi</td>
                   <td className="py-3 px-3">Opens mail client draft window</td>
                   <td className="py-3 px-3">Feedback forms, enquiry flyers</td>
                   <td className="py-3 px-3">Does not send message without user review</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">SMS Message</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">SMSTO:+15551234:Opt-in</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">SMSTO:+15551234:Opt-in</td>
                   <td className="py-3 px-3">Opens SMS app with drafted text</td>
                   <td className="py-3 px-3">SMS marketing opt-in, verification</td>
                   <td className="py-3 px-3">Carrier SMS charges may apply</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-3 font-bold text-[#18181B] dark:text-white">Calendar Event</td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899]">BEGIN:VEVENT\nSUMMARY:Launch...</td>
+                  <td className="py-3 px-3 font-mono text-[11px] text-[#EC4899] break-all">BEGIN:VEVENT\nSUMMARY:Launch...</td>
                   <td className="py-3 px-3">Prompts "Add to Calendar"</td>
                   <td className="py-3 px-3">Conferences, weddings, webinars</td>
                   <td className="py-3 px-3">Timezone offsets must be formatted UTC</td>
@@ -586,16 +621,16 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: Static vs Dynamic QR Codes (Honest Comparison Table) */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2">
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2 break-words">
             Static vs Dynamic QR Codes: An Honest Technical Comparison
           </h2>
           <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mb-4">
             Understanding how QR data is stored, why static codes never expire, and the service dependencies of dynamic redirects.
           </p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto w-full max-w-full -mx-1 px-1 sm:mx-0 sm:px-0">
+            <table className="w-full text-left text-xs border-collapse min-w-[540px]">
               <thead>
                 <tr className="border-b border-[#E4E4E7] dark:border-[#27272A] text-[#18181B] dark:text-white">
                   <th className="py-2.5 px-3 font-bold">Feature / Property</th>
@@ -640,16 +675,16 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: PNG vs SVG QR Codes */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2">
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2 break-words">
             PNG vs SVG: Choosing the Right Export Format
           </h2>
           <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mb-4">
             Matching raster images and vector graphics to your exact print or digital application.
           </p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto w-full max-w-full -mx-1 px-1 sm:mx-0 sm:px-0">
+            <table className="w-full text-left text-xs border-collapse min-w-[520px]">
               <thead>
                 <tr className="border-b border-[#E4E4E7] dark:border-[#27272A] text-[#18181B] dark:text-white">
                   <th className="py-2.5 px-3 font-bold">Attribute</th>
@@ -684,32 +719,33 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: QR Code Design and Scanning Tips */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-4">
+        {/* H2: QR Code Design and Scanning Tips */}
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-4 break-words">
             Professional QR Code Design &amp; Scanning Tips
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA]">
-            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA] min-w-0">
+            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5 min-w-0">
               <strong className="text-[#18181B] dark:text-white block font-bold text-sm">
                 The 10:1 Sizing Formula
               </strong>
-              <p>
+              <p className="break-words">
                 Minimum print size should follow the 10:1 distance ratio: <code className="text-[#EC4899] font-bold">Size = Distance / 10</code>. If customers scan from 30 cm away (restaurant table tent), print at least 3 cm × 3 cm. For a billboard scanned from 10 meters, print at least 1 meter wide.
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5">
+            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5 min-w-0">
               <strong className="text-[#18181B] dark:text-white block font-bold text-sm">
                 Preserve High Contrast
               </strong>
-              <p>
+              <p className="break-words">
                 Optical sensors rely on luminance differentials. Always pair dark pattern dots (black, dark navy, deep charcoal) with a crisp light background (white, cream). Never use inverted white-on-dark codes for mass print materials.
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5">
+            <div className="p-4 rounded-2xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-1.5 min-w-0">
               <strong className="text-[#18181B] dark:text-white block font-bold text-sm">
                 Respect the Quiet Zone
               </strong>
-              <p>
+              <p className="break-words">
                 The outer white border is called the Quiet Zone. It must be at least 4 module widths of uninterrupted blank space. Cropping the image right at the edge of the pattern finder squares will cause camera auto-detection to fail.
               </p>
             </div>
@@ -717,34 +753,34 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: Common QR Code Problems and Solutions (Diagnostic Table) */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2">
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-2 break-words">
             Common QR Code Scanning Problems &amp; Solutions
           </h2>
           <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mb-4">
             Diagnostic checklist for fixing scannability errors before printing.
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             {scanningProblems.map((item, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#141418]"
+                className="p-3.5 sm:p-4 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#141418] min-w-0"
               >
                 <div className="flex items-start justify-between gap-2">
                   <strong className="text-xs sm:text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-[#F59E0B] shrink-0" />
-                    <span>{item.problem}</span>
+                    <span className="break-words">{item.problem}</span>
                   </strong>
                 </div>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  <div>
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs min-w-0">
+                  <div className="min-w-0">
                     <span className="font-semibold text-[#71717A] block">Root Cause:</span>
-                    <p className="text-[#18181B] dark:text-[#D4D4D8]">{item.cause}</p>
+                    <p className="text-[#18181B] dark:text-[#D4D4D8] break-words">{item.cause}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-semibold text-[#16A34A] block">Recommended Fix:</span>
-                    <p className="text-[#18181B] dark:text-[#D4D4D8]">{item.solution}</p>
+                    <p className="text-[#18181B] dark:text-[#D4D4D8] break-words">{item.solution}</p>
                   </div>
                 </div>
               </div>
@@ -753,12 +789,12 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: Privacy and Safety */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-4 flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-[#16A34A]" />
-            Privacy, Security &amp; Safety Practices
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5] mb-4 flex items-center gap-2 break-words">
+            <ShieldCheck className="w-6 h-6 text-[#16A34A] shrink-0" />
+            <span>Privacy, Security &amp; Safety Practices</span>
           </h2>
-          <div className="space-y-3 text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA] leading-relaxed">
+          <div className="space-y-3 text-xs sm:text-sm text-[#71717A] dark:text-[#A1A1AA] leading-relaxed break-words">
             <p>
               <strong>100% In-Browser Cryptographic Generation:</strong> Unlike many commercial QR websites that secretly route your target URLs through dynamic redirects to monetize scan analytics or inject advertisements later, RajToolBox operates entirely in your local web browser. Your Wi-Fi network credentials, personal contact phone numbers, and company logos never leave your computer or smartphone.
             </p>
@@ -769,7 +805,7 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
         </section>
 
         {/* H2: Frequently Asked Questions */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs">
+        <section className="p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs min-w-0 w-full">
           <div className="flex items-center gap-2 mb-2">
             <HelpCircle className="w-5 h-5 text-[#EC4899]" />
             <h2 className="text-xl sm:text-2xl font-black text-[#18181B] dark:text-[#F4F4F5]">
@@ -816,6 +852,71 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
 
       {/* 7. AUTHOR BOX */}
       <AuthorBox />
+
+      {/* 8. SHARE TOOL SECTION (Branded tool-sharing specifically after author section) */}
+      <section className="my-8 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] p-5 sm:p-6 shadow-xs min-w-0 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7] dark:border-[#27272A]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="shrink-0 p-1.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A]">
+              <RajToolBoxLogo variant="icon-only" className="w-8 h-8 rounded-lg" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-[#18181B] dark:text-[#F4F4F5]">
+                Share RajToolBox QR Code Generator
+              </h3>
+              <p className="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">
+                Share this free QR Code Generator with friends, students, creators, and businesses.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5 min-w-0 w-full">
+          {/* A. Share Tool (Prefers Web Share API, falls back gracefully) */}
+          <button
+            type="button"
+            onClick={handleShareTool}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777] active:scale-[0.99] transition-all cursor-pointer min-w-0"
+            aria-label="Share QR Code Generator"
+          >
+            <Share2 className="w-4 h-4 shrink-0" />
+            <span className="truncate">Share Tool</span>
+          </button>
+
+          {/* B. Copy Tool Link */}
+          <button
+            type="button"
+            onClick={handleCopyToolLink}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all min-w-0 cursor-pointer ${
+              toolLinkCopied
+                ? 'border-[#16A34A] bg-[#DCFCE7] dark:bg-[#14532D]/30 text-[#16A34A]'
+                : 'border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#141418] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5]'
+            }`}
+            aria-label="Copy QR Code Generator canonical tool link"
+          >
+            {toolLinkCopied ? (
+              <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+            ) : (
+              <Copy className="w-4 h-4 shrink-0" />
+            )}
+            <span className="truncate">{toolLinkCopied ? 'Link Copied!' : 'Copy Tool Link'}</span>
+          </button>
+
+          {/* C. WhatsApp Share (Native URI with URL-encoded suggested message) */}
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#25D366]/40 bg-[#F0FDF4] dark:bg-[#14532D]/20 text-[#15803D] dark:text-[#4ADE80] hover:bg-[#DCFCE7] dark:hover:bg-[#14532D]/30 text-xs font-semibold transition-all min-w-0"
+            aria-label="Share QR Code Generator on WhatsApp"
+          >
+            <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            <span className="truncate">WhatsApp</span>
+          </a>
+        </div>
+      </section>
     </div>
   );
 };

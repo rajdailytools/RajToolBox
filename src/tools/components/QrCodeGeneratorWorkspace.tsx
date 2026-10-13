@@ -724,39 +724,67 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dataUrl = canvas.toDataURL('image/png');
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      showToast('Pop-up blocked. Please allow pop-ups to print.', 'error');
-      return;
+
+    try {
+      // Use hidden iframe to avoid popup blockers in sandboxed iframe environments
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Print QR Code – RajToolBox</title>
+              <style>
+                @page { size: auto; margin: 15mm; }
+                body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 20px; }
+                .card { text-align: center; border: 1px solid #E4E4E7; border-radius: 16px; padding: 24px; max-width: 380px; }
+                img { max-width: 260px; width: 100%; height: auto; margin-bottom: 14px; }
+                h2 { margin: 0 0 6px 0; font-size: 18px; color: #18181B; }
+                p { margin: 0; font-size: 11px; color: #71717A; word-break: break-all; }
+                .badge { display: inline-block; padding: 3px 10px; background: #FCE7F3; color: #EC4899; font-weight: bold; font-size: 11px; border-radius: 9999px; margin-bottom: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <span class="badge">RajToolBox QR Generator</span>
+                <div><img src="${dataUrl}" alt="QR Code" /></div>
+                <h2>Scan with Smartphone Camera</h2>
+                <p>${currentPayload}</p>
+              </div>
+            </body>
+          </html>
+        `);
+        doc.close();
+        iframe.contentWindow?.focus();
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.print();
+          } catch (e) {
+            console.error(e);
+          }
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1000);
+        }, 250);
+      } else {
+        showToast('Printing unavailable in this browser.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Could not initiate print dialog.', 'error');
     }
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Print QR Code – RajToolBox</title>
-          <style>
-            body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; margin: 0; padding: 20px; }
-            .card { text-align: center; border: 1px solid #E4E4E7; border-radius: 16px; padding: 32px; max-width: 420px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-            img { max-width: 100%; height: auto; margin-bottom: 16px; }
-            h2 { margin: 0 0 8px 0; font-size: 20px; color: #18181B; }
-            p { margin: 0; font-size: 13px; color: #71717A; word-break: break-all; }
-            .badge { display: inline-block; padding: 4px 12px; background: #FCE7F3; color: #EC4899; font-weight: bold; font-size: 12px; border-radius: 9999px; margin-bottom: 16px; }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <span class="badge">RajToolBox QR Generator</span>
-            <div><img src="${dataUrl}" alt="QR Code" /></div>
-            <h2>Scan with Any Smartphone Camera</h2>
-            <p>${currentPayload}</p>
-          </div>
-          <script>
-            window.onload = function() { window.print(); };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   };
 
   // Reset form
@@ -804,13 +832,13 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
   ];
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 min-w-0">
       {/* 1. QR TYPE TABS */}
-      <div>
+      <div className="w-full min-w-0">
         <label className="block text-xs font-bold uppercase tracking-wider text-[#71717A] dark:text-[#A1A1AA] mb-2">
           1. Select QR Code Type
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 p-1.5 rounded-2xl bg-[#F4F4F5] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-[#F4F4F5] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A] w-full min-w-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = qrType === tab.id;
@@ -819,14 +847,14 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setQrType(tab.id)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all text-left min-w-0 w-full ${
                   isActive
                     ? 'bg-white dark:bg-[#18181B] text-[#EC4899] shadow-sm ring-1 ring-[#EC4899]/30'
                     : 'text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] dark:hover:text-white hover:bg-white/50'
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#EC4899]' : 'text-[#71717A]'}`} />
-                <span className="truncate">{tab.label}</span>
+                <span className="truncate min-w-0">{tab.label}</span>
               </button>
             );
           })}
@@ -834,11 +862,11 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
       </div>
 
       {/* 2. MAIN WORKSPACE: Inputs on Left, Real Preview on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-w-0 w-full">
         {/* Left Column: Input Form + Customization (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-6 min-w-0 w-full">
           {/* Dynamic Content Card */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-4">
+          <div className="p-4 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-4 min-w-0 w-full">
             <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3">
               <h2 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-black">
@@ -1430,7 +1458,7 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
           </div>
 
           {/* 3. CUSTOMIZATION & STYLING CARD */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-5">
+          <div className="p-4 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-5 min-w-0 w-full">
             <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3">
               <h2 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-black">
@@ -1444,13 +1472,13 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
             </div>
 
             {/* Color controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
               {/* Foreground Color */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="block text-xs font-semibold text-[#18181B] dark:text-[#E4E4E7]">
                   Foreground (Dots / Pattern)
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-wrap gap-2 min-w-0">
                   <input
                     type="color"
                     value={fgColor}
@@ -1462,16 +1490,16 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                     type="text"
                     value={fgColor.toUpperCase()}
                     onChange={(e) => setFgColor(e.target.value)}
-                    className="w-24 px-2.5 py-1.5 text-xs font-mono rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#18181B] dark:text-[#F4F4F5]"
+                    className="w-20 sm:w-24 px-2 py-1.5 text-xs font-mono rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#18181B] dark:text-[#F4F4F5] min-w-0"
                   />
                   {/* Swatches */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center flex-wrap gap-1">
                     {['#18181B', '#1E3A8A', '#065F46', '#BE185D'].map((c) => (
                       <button
                         key={c}
                         type="button"
                         onClick={() => setFgColor(c)}
-                        className="w-5 h-5 rounded-md border border-[#E4E4E7] dark:border-[#27272A] transition-transform hover:scale-110"
+                        className="w-5 h-5 rounded-md border border-[#E4E4E7] dark:border-[#27272A] transition-transform hover:scale-110 shrink-0"
                         style={{ backgroundColor: c }}
                         title={`Set foreground to ${c}`}
                       />
@@ -1481,7 +1509,7 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
               </div>
 
               {/* Background Color */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-[#18181B] dark:text-[#E4E4E7]">
                     Background Color
@@ -1496,7 +1524,7 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                     <span>Transparent</span>
                   </label>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-wrap gap-2 min-w-0">
                   <input
                     type="color"
                     disabled={isTransparentBg}
@@ -1512,19 +1540,19 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                     disabled={isTransparentBg}
                     value={isTransparentBg ? 'Transparent' : bgColor.toUpperCase()}
                     onChange={(e) => setBgColor(e.target.value)}
-                    className={`w-24 px-2.5 py-1.5 text-xs font-mono rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#18181B] dark:text-[#F4F4F5] ${
+                    className={`w-20 sm:w-24 px-2 py-1.5 text-xs font-mono rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#18181B] dark:text-[#F4F4F5] min-w-0 ${
                       isTransparentBg ? 'opacity-40' : ''
                     }`}
                   />
                   {/* Swatches */}
                   {!isTransparentBg && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center flex-wrap gap-1">
                       {['#FFFFFF', '#FFFDF7', '#F4F4F5', '#FEF3C7'].map((c) => (
                         <button
                           key={c}
                           type="button"
                           onClick={() => setBgColor(c)}
-                          className="w-5 h-5 rounded-md border border-[#E4E4E7] dark:border-[#27272A] transition-transform hover:scale-110"
+                          className="w-5 h-5 rounded-md border border-[#E4E4E7] dark:border-[#27272A] transition-transform hover:scale-110 shrink-0"
                           style={{ backgroundColor: c }}
                           title={`Set background to ${c}`}
                         />
@@ -1663,11 +1691,11 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                 )}
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-semibold text-[#18181B] dark:text-[#E4E4E7] mb-1">
                   Quiet Zone (Outer White Margin)
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 sm:gap-2 min-w-0">
                   {[
                     { val: 0, label: 'None (0)' },
                     { val: 2, label: 'Compact (2)' },
@@ -1677,10 +1705,10 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                       key={m.val}
                       type="button"
                       onClick={() => setMargin(m.val)}
-                      className={`flex-1 py-2 text-xs rounded-xl font-bold border transition-all ${
+                      className={`flex-1 py-1.5 sm:py-2 px-1 text-xs rounded-xl font-bold border transition-all min-w-0 truncate text-center ${
                         margin === m.val
                           ? 'border-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899]'
-                          : 'border-[#E4E4E7] dark:border-[#27272A] text-[#71717A]'
+                          : 'border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] hover:border-[#EC4899]/50'
                       }`}
                     >
                       {m.label}
@@ -1693,8 +1721,8 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
         </div>
 
         {/* Right Column: Real Preview + Verification + Download Card (5 cols) */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20">
-          <div className="p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-sm flex flex-col items-center text-center space-y-4">
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20 min-w-0 w-full">
+          <div className="p-4 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-sm flex flex-col items-center text-center space-y-4 min-w-0 w-full">
             <div className="w-full flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3">
               <span className="text-xs font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#EC4899]" />
@@ -1706,28 +1734,36 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
               </span>
             </div>
 
-            {/* QR Canvas Display Container */}
-            <div className="relative p-4 rounded-2xl bg-white border border-[#E4E4E7] shadow-xs flex items-center justify-center max-w-[280px] w-full aspect-square">
-              {/* Actual HTML5 Canvas */}
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full object-contain rounded-lg"
-                style={{ imageRendering: 'pixelated' }}
-                aria-label="Generated QR Code Preview"
-              />
-              {isGenerating && (
-                <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center rounded-2xl">
-                  <div className="w-6 h-6 border-2 border-[#EC4899] border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
+            {/* QR Canvas Display Container (Requirement 2: Responsive, square preview, perfectly contained) */}
+            <div className="w-full flex justify-center items-center py-1 min-w-0">
+              <div className="relative p-3 sm:p-4 rounded-2xl bg-white border border-[#E4E4E7] shadow-xs flex items-center justify-center w-full max-w-[240px] sm:max-w-[280px] aspect-square overflow-hidden">
+                {/* Actual HTML5 Canvas */}
+                <canvas
+                  ref={canvasRef}
+                  className="w-full max-w-full h-auto aspect-square object-contain rounded-md"
+                  style={{
+                    imageRendering: 'pixelated',
+                    width: '100%',
+                    maxWidth: '100%',
+                    height: 'auto',
+                    aspectRatio: '1 / 1'
+                  }}
+                  aria-label="Generated QR Code Preview"
+                />
+                {isGenerating && (
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center rounded-2xl">
+                    <div className="w-6 h-6 border-2 border-[#EC4899] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Export Resolution Picker */}
-            <div className="w-full text-left space-y-1.5">
+            <div className="w-full text-left space-y-1.5 min-w-0">
               <label className="block text-[11px] font-bold text-[#71717A] uppercase tracking-wider">
                 Download Resolution
               </label>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5 min-w-0 w-full">
                 {[
                   { px: 400, label: '400px', sub: 'Screen' },
                   { px: 800, label: '800px', sub: 'HD' },
@@ -1737,80 +1773,80 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                     key={res.px}
                     type="button"
                     onClick={() => setExportSize(res.px)}
-                    className={`py-1.5 px-2 rounded-lg text-center border transition-all ${
+                    className={`py-1.5 px-1 sm:px-2 rounded-lg text-center border transition-all min-w-0 ${
                       exportSize === res.px
                         ? 'border-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20 text-[#EC4899] font-bold'
-                        : 'border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] text-xs'
+                        : 'border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] text-xs hover:border-[#EC4899]/50'
                     }`}
                   >
-                    <div className="text-xs font-bold leading-none">{res.label}</div>
-                    <div className="text-[10px] opacity-75">{res.sub}</div>
+                    <div className="text-xs font-bold leading-tight truncate">{res.label}</div>
+                    <div className="text-[10px] opacity-75 truncate">{res.sub}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Primary Action Buttons */}
-            <div className="w-full space-y-2">
+            {/* Primary Action Buttons (Requirement 3: Fits container, responsive layout, min-w-0) */}
+            <div className="w-full space-y-2 min-w-0">
               <button
                 type="button"
                 onClick={handleDownloadPng}
                 disabled={!currentPayload || !!validationError}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer min-w-0"
               >
-                <Download className="w-4 h-4" />
-                <span>Download High-Res PNG ({exportSize}×{exportSize})</span>
+                <Download className="w-4 h-4 shrink-0" />
+                <span className="truncate">Download PNG ({exportSize}×{exportSize})</span>
               </button>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2 min-w-0 w-full">
                 <button
                   type="button"
                   onClick={handleDownloadSvg}
                   disabled={!currentPayload || !!validationError}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] text-xs font-semibold shadow-2xs hover:bg-[#FFFDF7] transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] text-xs font-semibold shadow-2xs hover:bg-[#FFFDF7] transition-all disabled:opacity-50 min-w-0"
                   title="Download scalable vector SVG for print, banners, or illustrator"
                 >
-                  <Layers className="w-3.5 h-3.5 text-[#EC4899]" />
-                  <span>Download SVG</span>
+                  <Layers className="w-3.5 h-3.5 text-[#EC4899] shrink-0" />
+                  <span className="truncate">Download SVG</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleCopyImage}
                   disabled={!currentPayload || !!validationError}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] text-xs font-semibold shadow-2xs hover:bg-[#FFFDF7] transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:border-[#EC4899] text-[#18181B] dark:text-[#F4F4F5] text-xs font-semibold shadow-2xs hover:bg-[#FFFDF7] transition-all disabled:opacity-50 min-w-0"
                   title="Copy QR image directly to clipboard"
                 >
-                  {copiedImage ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedImage ? 'Copied Image!' : 'Copy Image'}</span>
+                  {copiedImage ? <Check className="w-3.5 h-3.5 text-[#16A34A] shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
+                  <span className="truncate">{copiedImage ? 'Copied Image!' : 'Copy Image'}</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2 min-w-0 w-full">
                 <button
                   type="button"
                   onClick={handleShare}
                   disabled={!currentPayload || !!validationError}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#71717A] hover:text-[#18181B] dark:hover:text-white text-xs font-medium transition-colors"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#71717A] hover:text-[#18181B] dark:hover:text-white text-xs font-medium transition-colors min-w-0"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Share</span>
+                  <Share2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Share QR</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handlePrint}
                   disabled={!currentPayload || !!validationError}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#71717A] hover:text-[#18181B] dark:hover:text-white text-xs font-medium transition-colors"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#71717A] hover:text-[#18181B] dark:hover:text-white text-xs font-medium transition-colors min-w-0"
                 >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print Sheet</span>
+                  <Printer className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Print Sheet</span>
                 </button>
               </div>
             </div>
 
             {/* Decoded Payload Inspector */}
-            <div className="w-full text-left pt-2 border-t border-[#E4E4E7] dark:border-[#27272A] space-y-1">
+            <div className="w-full text-left pt-2 border-t border-[#E4E4E7] dark:border-[#27272A] space-y-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">
                   Embedded Payload
