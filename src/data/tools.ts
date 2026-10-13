@@ -960,34 +960,94 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     slug: 'qr-code-generator',
     name: 'QR Code Generator',
     category: 'qr-barcode-tools',
-    shortDescription: 'Generate customized high-resolution QR codes for websites, plain text, WiFi, email, and phone numbers.',
-    fullDescription: 'Create professional, scannable QR codes instantly. Customize foreground and background colors, adjust error correction levels, and download crystal-clear PNG images ready for print or web.',
+    shortDescription: 'Generate customized high-resolution QR codes for websites, text, Wi-Fi, vCard contacts, UPI payments, email, and phone numbers.',
+    fullDescription: 'Create professional, scannable QR codes instantly. Customize foreground and background colors, upload brand logos with Reed-Solomon High error correction, and download crystal-clear PNG images (up to 2400px) or scalable vector SVG files ready for print and web.',
     iconName: 'QrCode',
-    keywords: ['qr code generator', 'make qr code', 'free qr creator', 'url qr code', 'wifi qr'],
+    keywords: [
+      'qr code generator',
+      'free qr code generator',
+      'qr code maker online',
+      'url to qr code',
+      'text to qr code',
+      'qr code with logo',
+      'wifi qr code generator',
+      'qr code png download',
+      'qr code svg download',
+      'qr code for contact details',
+      'static vs dynamic qr code',
+      'upi qr code generator'
+    ],
     popular: true,
     featured: true,
+    aliases: [
+      'qr creator',
+      'qr maker',
+      'free qr code builder',
+      'barcode 2d generator',
+      'wifi qr maker',
+      'vcard qr generator'
+    ],
+    useCases: [
+      'restaurant table menu links',
+      'guest wifi network password sharing',
+      'digital business card vcard on resume or badge',
+      'upi retail payments and invoicing in India',
+      'retail packaging and product label links',
+      'event registration and calendar invite sharing'
+    ],
+    problemPhrases: [
+      'how to make qr code for website',
+      'how to share wifi password with qr',
+      'qr code not scanning on phone',
+      'create qr code with company logo',
+      'free qr code that never expires'
+    ],
+    intentPhrases: [
+      'qr code generator free',
+      'make free qr code online',
+      'wifi qr code maker',
+      'vcard contact qr code',
+      'upi payment qr code generator',
+      'high resolution qr code download'
+    ],
+    hinglishPhrases: [
+      'qr code banana hai',
+      'wifi ka qr code kaise banaye',
+      'qr code download kaise kare',
+      'free qr code generator bina login'
+    ],
+    presets: [
+      { name: 'Website URL', description: 'Encodes web link with instant browser launch on scan' },
+      { name: 'Guest Wi-Fi', description: 'Encodes SSID, security, and password for zero-type connection' },
+      { name: 'vCard 3.0 Contact', description: 'Digital business card with one-tap Add to Contacts prompt' },
+      { name: 'UPI Payment', description: 'NPCI UPI deep link for Google Pay, PhonePe, Paytm, and BHIM' },
+      { name: 'Vector Print (SVG)', description: 'Infinite resolution vector graphic for banners, flyers, and merchandise' }
+    ],
     howToSteps: [
-      { step: 1, title: 'Choose QR Type', instruction: 'Select URL, Plain Text, WiFi Network, Email, or Phone Number.' },
-      { step: 2, title: 'Enter Details', instruction: 'Fill in your target link, text, or credentials.' },
-      { step: 3, title: 'Customize Colors', instruction: 'Choose custom foreground and background colors.' },
-      { step: 4, title: 'Download PNG', instruction: 'Click "Download QR Code" to save the high-res image.' }
+      { step: 1, title: 'Choose QR Type', instruction: 'Select Website URL, Plain Text, Wi-Fi Network, Contact vCard, UPI Payment, Email, or SMS.' },
+      { step: 2, title: 'Enter Information', instruction: 'Fill in your target address, credentials, or text. Real-time validation checks for syntax errors.' },
+      { step: 3, title: 'Style & Add Logo', instruction: 'Customize foreground and background colors, verify contrast ratio, and optionally upload a brand logo.' },
+      { step: 4, title: 'Inspect & Download', instruction: 'Verify the decoded payload preview and download high-resolution PNG (up to 2400px) or scalable SVG.' }
     ],
     realLifeExample: {
       title: 'Generating a Scannable Menu Link for a Restaurant',
-      inputDescription: 'URL: https://rajtoolbox.com/menu',
-      outputDescription: 'Sharp 400×400 px PNG QR code that instantly opens the menu on any smartphone camera.',
+      inputDescription: 'URL: https://rajtoolbox.com/menu with Custom Berry Foreground (#BE185D) and High Error Correction',
+      outputDescription: 'Crisp 1600×1600 px PNG QR code printed on acrylic table stands, readable instantly across all smartphone cameras.',
       details: [
-        { label: 'Target URL', value: 'https://rajtoolbox.com/' },
-        { label: 'Error Correction', value: 'High (H)' },
-        { label: 'Download Format', value: 'PNG (400×400)' }
+        { label: 'Target URL', value: 'https://rajtoolbox.com/menu' },
+        { label: 'Error Correction', value: 'High (H ~30% recovery)' },
+        { label: 'Quiet Zone', value: 'Standard (4 modules)' },
+        { label: 'Export Format', value: 'Print PNG (1600×1600 px, 300 DPI)' }
       ]
     },
-    howItWorks: 'Encodes characters into a 2D matrix using Reed-Solomon error correction codewords, rendered onto a high-density canvas.',
+    howItWorks: 'Encodes character streams into 2D matrix binary codewords according to ISO/IEC 18004 standards, using Reed-Solomon polynomial parity blocks for error correction and optical finder patterns for multi-angle scanning.',
     faqs: [
-      { question: 'Do these QR codes ever expire?', answer: 'No! These are static QR codes encoding your exact data directly. They will work indefinitely.' },
-      { question: 'Are there any scan limits or fees?', answer: 'None. You can generate unlimited QR codes for personal or commercial use completely free.' }
+      { question: 'Do these QR codes ever expire?', answer: 'No! These are 100% static QR codes encoding your raw data directly into the pattern. They will work indefinitely as long as the printed graphic remains intact.' },
+      { question: 'Are there any scan limits or fees?', answer: 'None. You can generate unlimited QR codes for personal or commercial use completely free with zero subscription requirements.' },
+      { question: 'Can I add my own logo to the QR code?', answer: 'Yes. When you upload a custom logo, RajToolBox automatically elevates the Reed-Solomon Error Correction Level to High (H) so phone cameras can reconstruct data obscured by the logo.' },
+      { question: 'Should I download PNG or SVG?', answer: 'Download PNG for websites, social media, and digital screens. Download SVG for physical printing, business cards, merchandise, and large billboard banners.' }
     ],
-    relatedToolSlugs: ['barcode-generator', 'url-codec', 'utm-builder']
+    relatedToolSlugs: ['barcode-generator', 'url-codec', 'image-resizer', 'image-compressor', 'meta-tag-generator']
   },
   {
     id: 'barcode-generator',

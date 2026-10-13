@@ -17,6 +17,7 @@ import { PdfCompressorPage } from './PdfCompressorPage';
 import { ImageCompressorPage } from './ImageCompressorPage';
 import { TextCaseConverterPage } from './TextCaseConverterPage';
 import { JsonFormatterPage } from './JsonFormatterPage';
+import { QrCodeGeneratorPage } from './QrCodeGeneratorPage';
 
 interface ToolDetailPageProps {
   tool: ToolItem;
@@ -34,6 +35,9 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ tool }) => {
   }
   if (tool.slug === 'json-formatter' || tool.slug === 'json-formatter-validator') {
     return <JsonFormatterPage tool={tool} />;
+  }
+  if (tool.slug === 'qr-code-generator') {
+    return <QrCodeGeneratorPage tool={tool} />;
   }
 
   const { isFavorite, toggleFavorite } = useApp();
