@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import QRCode from 'qrcode';
 import { useApp } from '../../context/AppContext';
 import {
@@ -30,20 +30,14 @@ import {
   Layers,
   Settings2,
   Info,
-  Maximize2
+  Maximize2,
+  Search,
+  X
 } from 'lucide-react';
-
-export type QrType =
-  | 'url'
-  | 'text'
-  | 'phone'
-  | 'sms'
-  | 'email'
-  | 'wifi'
-  | 'vcard'
-  | 'location'
-  | 'upi'
-  | 'calendar';
+import { QrType, QrCategory, CATEGORIES, PLATFORMS } from './qrPlatforms';
+import { PlatformIcon } from './PlatformIcon';
+import { PdfQrSection } from './PdfQrSection';
+export type { QrType };
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
@@ -89,8 +83,26 @@ function escapeWifiString(str: string): string {
 export const QrCodeGeneratorWorkspace: React.FC = () => {
   const { showToast } = useApp();
 
-  // QR Type State
+  // QR Type & Filter States
   const [qrType, setQrType] = useState<QrType>('url');
+  const [selectedCategory, setSelectedCategory] = useState<QrCategory>('all');
+  const [platformSearch, setPlatformSearch] = useState('');
+
+  // PDF Document State
+  const [pdfUrl, setPdfUrl] = useState('https://rajtoolbox.com/docs/annual-report.pdf');
+
+  // Multi-platform URL storage initialized from PLATFORMS defaults
+  const [platformUrls, setPlatformUrls] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    (Object.keys(PLATFORMS) as QrType[]).forEach((k) => {
+      initial[k] = PLATFORMS[k].defaultPayload;
+    });
+    return initial;
+  });
+
+  const handlePlatformUrlChange = (type: QrType, val: string) => {
+    setPlatformUrls((prev) => ({ ...prev, [type]: val }));
+  };
 
   // Input states
   // 1. URL
@@ -341,8 +353,139 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
         return { payload: lines.join('\n'), error: null };
       }
 
-      default:
-        return { payload: 'https://rajtoolbox.com', error: null };
+      case 'pdf': {
+        const trimmed = pdfUrl.trim();
+        if (!trimmed) {
+          return { payload: '', error: 'Please enter a valid PDF document URL.' };
+        }
+        let normalized = trimmed;
+        if (!/^https?:\/\//i.test(normalized)) {
+          normalized = `https://${normalized}`;
+        }
+        try {
+          new URL(normalized);
+          return { payload: normalized, error: null };
+        } catch {
+          return { payload: normalized, error: 'The entered PDF URL appears invalid. Please check the domain format.' };
+        }
+      }
+
+      default: {
+        // Any social / messaging / media / creative / form platform in PLATFORMS
+        const currentVal = (platformUrls[qrType] || '').trim();
+        const pMeta = PLATFORMS[qrType];
+        if (!currentVal) {
+          return { payload: '', error: `Please enter a valid link or username for ${pMeta ? pMeta.name : 'this platform'}.` };
+        }
+
+        let normalized = currentVal;
+
+        if (qrType === 'whatsapp') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            const digitsOnly = normalized.replace(/[^0-9]/g, '');
+            if (digitsOnly.length >= 7) {
+              normalized = `https://wa.me/${digitsOnly}`;
+            } else {
+              normalized = `https://${normalized}`;
+            }
+          }
+        } else if (qrType === 'telegram') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://t.me/${normalized.substring(1)}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://t.me/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'messenger') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://m.me/${normalized.substring(1)}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://m.me/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'snapchat') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://snapchat.com/add/${normalized.substring(1)}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://snapchat.com/add/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'tiktok') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://tiktok.com/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://tiktok.com/@${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'threads') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://threads.net/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://threads.net/@${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'x_twitter') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://x.com/${normalized.substring(1)}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://x.com/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'instagram') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://instagram.com/${normalized.substring(1)}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://instagram.com/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'github') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://github.com/${normalized.replace(/^@/, '')}`;
+          }
+        } else if (qrType === 'gitlab') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://gitlab.com/${normalized.replace(/^@/, '')}`;
+          }
+        } else if (qrType === 'behance') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://behance.net/${normalized.replace(/^@/, '')}`;
+          }
+        } else if (qrType === 'dribbble') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://dribbble.com/${normalized.replace(/^@/, '')}`;
+          }
+        } else if (qrType === 'medium') {
+          if (normalized.startsWith('@')) {
+            normalized = `https://medium.com/${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized) && !normalized.includes('/')) {
+            normalized = `https://medium.com/@${normalized}`;
+          } else if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        } else if (qrType === 'twitch') {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://twitch.tv/${normalized.replace(/^@/, '')}`;
+          }
+        } else {
+          if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `https://${normalized}`;
+          }
+        }
+
+        try {
+          new URL(normalized);
+          return { payload: normalized, error: null };
+        } catch {
+          return { payload: normalized, error: `Invalid URL format for ${pMeta ? pMeta.name : 'selected platform'}.` };
+        }
+      }
     }
   }, [
     qrType,
@@ -379,7 +522,9 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
     eventStart,
     eventEnd,
     eventLocation,
-    eventDesc
+    eventDesc,
+    pdfUrl,
+    platformUrls
   ]);
 
   // When a logo is uploaded, enforce Error Correction High (H) to guarantee scannability
@@ -815,50 +960,155 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
     setMargin(2);
     setExportSize(800);
     removeLogo();
+    setPdfUrl('https://rajtoolbox.com/docs/annual-report.pdf');
+    const initialUrls: Record<string, string> = {};
+    (Object.keys(PLATFORMS) as QrType[]).forEach((k) => {
+      initialUrls[k] = PLATFORMS[k].defaultPayload;
+    });
+    setPlatformUrls(initialUrls);
+    setSelectedCategory('all');
+    setPlatformSearch('');
     showToast('Reset generator to default settings.', 'info');
   };
 
-  const tabs: { id: QrType; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'url', label: 'Website URL', icon: Globe },
-    { id: 'text', label: 'Plain Text', icon: FileText },
-    { id: 'wifi', label: 'Wi-Fi Network', icon: Wifi },
-    { id: 'vcard', label: 'Contact (vCard)', icon: Contact },
-    { id: 'upi', label: 'UPI Payment', icon: CreditCard },
-    { id: 'email', label: 'Email Draft', icon: Mail },
-    { id: 'sms', label: 'SMS Message', icon: MessageSquare },
-    { id: 'phone', label: 'Phone Call', icon: Phone },
-    { id: 'location', label: 'Map Location', icon: MapPin },
-    { id: 'calendar', label: 'Event', icon: Calendar }
-  ];
+  // Filtered platforms based on category and optional search query
+  const filteredPlatforms = useMemo(() => {
+    let list = Object.values(PLATFORMS);
+    if (selectedCategory !== 'all') {
+      list = list.filter((p) => p.category === selectedCategory);
+    }
+    if (platformSearch.trim()) {
+      const q = platformSearch.trim().toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.domainHint.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [selectedCategory, platformSearch]);
+
+  const activePlatform = PLATFORMS[qrType] || PLATFORMS.url;
 
   return (
     <div className="w-full space-y-6 min-w-0">
-      {/* 1. QR TYPE TABS */}
-      <div className="w-full min-w-0">
-        <label className="block text-xs font-bold uppercase tracking-wider text-[#71717A] dark:text-[#A1A1AA] mb-2">
-          1. Select QR Code Type
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-[#F4F4F5] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A] w-full min-w-0">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = qrType === tab.id;
+      {/* 1. QR TYPE SELECTOR (All 36 platforms organized by category) */}
+      <div className="w-full min-w-0 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#71717A] dark:text-[#A1A1AA]">
+            1. Select QR Code Type ({filteredPlatforms.length} Shown)
+          </label>
+          <div className="text-xs text-[#71717A] dark:text-[#A1A1AA] flex items-center gap-1.5 flex-wrap">
+            <span>Selected:</span>
+            <span className="font-bold text-[#EC4899] bg-[#FCE7F3] dark:bg-[#EC4899]/20 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+              <PlatformIcon type={qrType} className="w-3.5 h-3.5" />
+              <span>{activePlatform.name}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Category Pills Filter Bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none min-w-0">
+          {CATEGORIES.map((cat) => {
+            const isCatActive = selectedCategory === cat.id;
             return (
               <button
-                key={tab.id}
+                key={cat.id}
                 type="button"
-                onClick={() => setQrType(tab.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all text-left min-w-0 w-full ${
-                  isActive
-                    ? 'bg-white dark:bg-[#18181B] text-[#EC4899] shadow-sm ring-1 ring-[#EC4899]/30'
-                    : 'text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] dark:hover:text-white hover:bg-white/50'
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 min-w-0 ${
+                  isCatActive
+                    ? 'bg-[#EC4899] text-white shadow-xs'
+                    : 'bg-[#F4F4F5] dark:bg-[#202026] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] dark:hover:text-white border border-[#E4E4E7] dark:border-[#27272A]'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#EC4899]' : 'text-[#71717A]'}`} />
-                <span className="truncate min-w-0">{tab.label}</span>
+                <span>{cat.label}</span>
+                <span
+                  className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isCatActive ? 'bg-white/20 text-white' : 'bg-black/5 dark:bg-white/10'
+                  }`}
+                >
+                  {cat.count}
+                </span>
               </button>
             );
           })}
         </div>
+
+        {/* Platform Search Input */}
+        <div className="relative w-full min-w-0">
+          <Search className="w-4 h-4 text-[#71717A] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={platformSearch}
+            onChange={(e) => setPlatformSearch(e.target.value)}
+            placeholder="Search platforms e.g. Instagram, PDF, Wi-Fi, Spotify, WhatsApp, GitHub..."
+            className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-[#18181B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30"
+          />
+          {platformSearch && (
+            <button
+              type="button"
+              onClick={() => setPlatformSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-[#18181B] dark:hover:text-white p-0.5 cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Responsive Grid of Platforms */}
+        {filteredPlatforms.length > 0 ? (
+          <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-[#F4F4F5] dark:bg-[#202026] border border-[#E4E4E7] dark:border-[#27272A] w-full min-w-0">
+            {filteredPlatforms.map((tab) => {
+              const isActive = qrType === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setQrType(tab.id)}
+                  className={`group flex items-center gap-1.5 sm:gap-2 px-2.5 py-2 rounded-xl text-xs font-bold transition-all text-left min-w-0 w-full cursor-pointer ${
+                    isActive
+                      ? 'bg-white dark:bg-[#18181B] text-[#EC4899] shadow-xs ring-1 ring-[#EC4899]/30'
+                      : 'text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] dark:hover:text-white hover:bg-white/50 dark:hover:bg-[#18181B]/50'
+                  }`}
+                  title={`${tab.name} (${tab.domainHint})`}
+                >
+                  <div
+                    className={`shrink-0 ${
+                      isActive
+                        ? 'text-[#EC4899]'
+                        : 'text-[#71717A] dark:text-[#A1A1AA] group-hover:text-[#18181B] dark:group-hover:text-white'
+                    }`}
+                  >
+                    <PlatformIcon type={tab.id} className="w-4 h-4" />
+                  </div>
+                  <span className="truncate min-w-0 flex-1">{tab.name}</span>
+                  {tab.badge && (
+                    <span className="hidden min-[500px]:inline text-[9px] px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 font-normal shrink-0">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 rounded-xl text-center bg-white dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] text-xs text-[#71717A] dark:text-[#A1A1AA] space-y-2">
+            <div>No platforms found matching "{platformSearch}".</div>
+            <button
+              type="button"
+              onClick={() => {
+                setPlatformSearch('');
+                setSelectedCategory('all');
+              }}
+              className="text-xs font-bold text-[#EC4899] hover:underline cursor-pointer"
+            >
+              Clear filters and view all 36 platforms
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 2. MAIN WORKSPACE: Inputs on Left, Real Preview on Right */}
@@ -867,17 +1117,17 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
         <div className="lg:col-span-7 space-y-6 min-w-0 w-full">
           {/* Dynamic Content Card */}
           <div className="p-4 sm:p-6 rounded-2xl border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-xs space-y-4 min-w-0 w-full">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3">
-              <h2 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-black">
+            <div className="flex items-center justify-between border-b border-[#E4E4E7] dark:border-[#27272A] pb-3 flex-wrap gap-2">
+              <h2 className="text-sm font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-2 min-w-0">
+                <span className="w-5 h-5 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center text-xs font-black shrink-0">
                   2
                 </span>
-                Enter Details for {tabs.find((t) => t.id === qrType)?.label}
+                <span className="truncate">Enter Details for {activePlatform.name}</span>
               </h2>
               <button
                 onClick={handleReset}
                 type="button"
-                className="inline-flex items-center gap-1 text-xs text-[#71717A] hover:text-[#EC4899] font-medium transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-[#71717A] hover:text-[#EC4899] font-medium transition-colors cursor-pointer shrink-0"
                 title="Reset to default example"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1445,6 +1695,69 @@ export const QrCodeGeneratorWorkspace: React.FC = () => {
                 <p className="text-[11px] text-[#71717A] dark:text-[#A1A1AA]">
                   Encodes an RFC 5545 iCalendar VEVENT block. When scanned, prompts the phone to add this event into Apple Calendar, Google Calendar, or Outlook.
                 </p>
+              </div>
+            )}
+
+            {/* DEDICATED PDF DOCUMENT SECTION (Mode A: URL, Mode B: Guide, Mode C: Local Inspector) */}
+            {qrType === 'pdf' && (
+              <PdfQrSection pdfUrl={pdfUrl} setPdfUrl={setPdfUrl} />
+            )}
+
+            {/* DEDICATED SOCIAL / MESSAGING / MEDIA / CREATIVE / FORMS PLATFORMS */}
+            {!['url', 'text', 'wifi', 'vcard', 'upi', 'email', 'sms', 'phone', 'location', 'calendar', 'pdf'].includes(qrType) && (
+              <div className="space-y-4 min-w-0 w-full">
+                <div className="space-y-2 min-w-0">
+                  <div className="flex items-center justify-between flex-wrap gap-1 min-w-0">
+                    <label className="block text-xs font-semibold text-[#18181B] dark:text-[#E4E4E7]">
+                      {activePlatform.inputLabel} <span className="text-[#EC4899]">*</span>
+                    </label>
+                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-[#FFFDF7] dark:bg-[#121215] border border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] dark:text-[#A1A1AA] truncate">
+                      {activePlatform.domainHint}
+                    </span>
+                  </div>
+
+                  <div className="relative min-w-0">
+                    <input
+                      type="text"
+                      value={platformUrls[qrType] || ''}
+                      onChange={(e) => handlePlatformUrlChange(qrType, e.target.value)}
+                      placeholder={activePlatform.placeholder}
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#121215] text-[#18181B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-[#71717A] dark:text-[#A1A1AA] pt-0.5 flex-wrap gap-1.5">
+                    <span className="truncate max-w-[280px] sm:max-w-md">
+                      Example: <code className="text-[#EC4899]">{activePlatform.exampleUrl}</code>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handlePlatformUrlChange(qrType, activePlatform.exampleUrl)}
+                      className="text-xs font-bold text-[#EC4899] hover:underline cursor-pointer shrink-0"
+                    >
+                      Fill Example
+                    </button>
+                  </div>
+                </div>
+
+                {/* Platform How-to-use Guidance & Limitations */}
+                <div className="p-3.5 rounded-xl bg-[#FFFDF7] dark:bg-[#141418] border border-[#E4E4E7] dark:border-[#27272A] space-y-2 text-xs min-w-0">
+                  <div className="font-bold text-[#18181B] dark:text-[#F4F4F5] flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-[#EC4899] shrink-0" />
+                    <span>{activePlatform.guideTitle}</span>
+                  </div>
+                  <ul className="list-disc pl-4 space-y-1 text-[#71717A] dark:text-[#A1A1AA] text-[11px] leading-relaxed">
+                    {activePlatform.guideInstructions.map((inst, i) => (
+                      <li key={i}>{inst}</li>
+                    ))}
+                  </ul>
+                  {activePlatform.limitations && (
+                    <div className="p-2.5 rounded-lg bg-[#FEF3C7] dark:bg-[#78350F]/20 text-[#92400E] dark:text-[#FDE68A] text-[11px] flex items-start gap-1.5 leading-normal mt-2 border border-[#FDE68A] dark:border-[#78350F]">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{activePlatform.limitations}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

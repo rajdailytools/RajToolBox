@@ -272,7 +272,7 @@ export const QrCodeGeneratorPage: React.FC<QrCodeGeneratorPageProps> = ({ tool }
           </h1>
 
           <p className="text-sm sm:text-base text-[#71717A] dark:text-[#A1A1AA] mt-2 max-w-3xl leading-relaxed break-words">
-            Create custom high-resolution QR codes for websites, plain text, Wi-Fi networks, vCard contacts, UPI payments, emails, and phone calls. Customize colors, embed your logo with High Error Correction, and download crisp PNG or scalable vector SVG for print and digital use.
+            Create custom high-resolution QR codes for websites, PDF documents, social media (WhatsApp, Instagram, YouTube, LinkedIn, Spotify, TikTok), Wi-Fi networks, vCard contacts, UPI payments, emails, and phone calls. Customize colors, embed your logo with High Error Correction, and download crisp PNG or scalable vector SVG for print and digital use.
           </p>
         </div>
 

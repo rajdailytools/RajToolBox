@@ -208,10 +208,10 @@ export function getQrCodeGeneratorStaticHtml(): string {
         </div>
       </div>
       <div class="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5 min-w-0 w-full">
-        <button onclick="if(navigator.share){navigator.share({title:'RajToolBox QR Code Generator',url:'${canonicalUrl}'})}else{navigator.clipboard.writeText('${canonicalUrl}');alert('Tool link copied!')}" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777]">
+        <button onclick="if(navigator.share){navigator.share({title:'RajToolBox QR Code Generator',url:'${canonicalUrl}'})}else if(navigator.clipboard){navigator.clipboard.writeText('${canonicalUrl}');this.innerText='Copied!';setTimeout(()=>{this.innerText='Share Tool'},2000)}" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow-xs hover:bg-[#DB2777]">
           Share Tool
         </button>
-        <button onclick="navigator.clipboard.writeText('${canonicalUrl}');alert('Tool link copied to clipboard!')" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#141418] text-xs font-semibold text-[#18181B] dark:text-white hover:border-[#EC4899]">
+        <button onclick="if(navigator.clipboard){navigator.clipboard.writeText('${canonicalUrl}');this.innerText='Link Copied!';setTimeout(()=>{this.innerText='Copy Tool Link'},2000)}" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFDF7] dark:bg-[#141418] text-xs font-semibold text-[#18181B] dark:text-white hover:border-[#EC4899]">
           Copy Tool Link
         </button>
         <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#25D366]/40 bg-[#F0FDF4] dark:bg-[#14532D]/20 text-[#15803D] dark:text-[#4ADE80] text-xs font-semibold">
