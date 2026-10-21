@@ -13,6 +13,7 @@ import { IeltsBandCalculatorTool } from './components/IeltsBandCalculatorTool';
 import { ReadingSpeedCalculatorTool } from './components/ReadingSpeedCalculatorTool';
 import { StudyTimetablePlannerTool } from './components/StudyTimetablePlannerTool';
 import { ExamAccuracySpeedAnalyzerTool } from './components/ExamAccuracySpeedAnalyzerTool';
+import { SupremeCourtCourtMasterAgeCalculatorTool } from './components/SupremeCourtCourtMasterAgeCalculatorTool';
 import {
   PdfMergerComponent,
   PdfCompressorComponent,
@@ -228,6 +229,8 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool }) => {
       return <AgeLimitCalculatorTool />;
     case 'negative-marking-calculator':
       return <NegativeMarkingCalculatorTool />;
+    case 'supreme-court-court-master-age-calculator':
+      return <SupremeCourtCourtMasterAgeCalculatorTool />;
     case 'exam-photo-signature-resizer':
       return <ExamPhotoSignatureResizerTool />;
 

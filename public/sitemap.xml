@@ -286,6 +286,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rajtoolbox.com/tools/supreme-court-court-master-age-calculator/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rajtoolbox.com/supreme-court-court-master-age-calculator/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rajtoolbox.com/tools/negative-marking-calculator/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

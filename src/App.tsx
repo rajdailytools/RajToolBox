@@ -40,7 +40,14 @@ const MainRouter: React.FC = () => {
     return <AllToolsPage />;
   }
 
-  // 3. Tool Detail Route (/tools/:slug)
+  // 3. Tool Detail Route (/tools/:slug or direct tool slug)
+  if (path === '/supreme-court-court-master-age-calculator') {
+    const tool = getToolBySlug('supreme-court-court-master-age-calculator');
+    if (tool) {
+      return <ToolDetailPage tool={tool} />;
+    }
+  }
+
   if (path.startsWith('/tools/')) {
     const slug = path.replace('/tools/', '');
     const tool = getToolBySlug(slug);

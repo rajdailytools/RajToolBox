@@ -18,12 +18,16 @@ import { ImageCompressorPage } from './ImageCompressorPage';
 import { TextCaseConverterPage } from './TextCaseConverterPage';
 import { JsonFormatterPage } from './JsonFormatterPage';
 import { QrCodeGeneratorPage } from './QrCodeGeneratorPage';
+import { SupremeCourtCourtMasterAgeCalculatorPage } from './SupremeCourtCourtMasterAgeCalculatorPage';
 
 interface ToolDetailPageProps {
   tool: ToolItem;
 }
 
 export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ tool }) => {
+  if (tool.slug === 'supreme-court-court-master-age-calculator') {
+    return <SupremeCourtCourtMasterAgeCalculatorPage tool={tool} />;
+  }
   if (tool.slug === 'pdf-compressor') {
     return <PdfCompressorPage tool={tool} />;
   }

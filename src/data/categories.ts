@@ -152,7 +152,7 @@ export const CATEGORIES: Record<ToolCategory, CategoryInfo> = {
     shortName: 'Exam & Eligibility',
     description: 'Check exam eligibility, calculate age limits with category relaxations, calculate negative marks, and resize photos & signatures for official forms.',
     iconName: 'Award',
-    featuredTools: ['exam-eligibility-checker', 'age-limit-calculator', 'negative-marking-calculator', 'exam-photo-signature-resizer']
+    featuredTools: ['supreme-court-court-master-age-calculator', 'exam-eligibility-checker', 'age-limit-calculator', 'negative-marking-calculator', 'exam-photo-signature-resizer']
   },
   'career-job-tools': {
     id: 'career-job-tools',

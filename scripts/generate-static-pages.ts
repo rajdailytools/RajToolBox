@@ -10,6 +10,7 @@ import { getImageCompressorStaticHtml } from './imageCompressorStaticContent.ts'
 import { getTextCaseConverterStaticHtml } from './textCaseConverterStaticContent.ts';
 import { getJsonFormatterStaticHtml } from './jsonFormatterStaticContent.ts';
 import { getQrCodeGeneratorStaticHtml } from './qrCodeGeneratorStaticContent.ts';
+import { getSupremeCourtCourtMasterStaticHtml } from './supremeCourtCourtMasterStaticContent.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -509,6 +510,10 @@ function generateToolPages(headAssets: AssetManifest): string[] {
       title = 'Text Case Converter – Uppercase, Lowercase, Title Case & More | RajToolBox';
       description =
         'Free online Text Case Converter to change text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, snake_case, kebab-case and more. Clean spaces, line breaks and formatting instantly.';
+    } else if (tool.slug === 'supreme-court-court-master-age-calculator') {
+      title = 'Supreme Court Court Master Age Calculator | RajToolBox';
+      description =
+        'Calculate your age for Supreme Court Court Master recruitment using your date of birth and the official age cutoff date. Check applicable age limits and relaxation rules.';
     }
 
     // Structured data
@@ -664,6 +669,8 @@ function generateToolPages(headAssets: AssetManifest): string[] {
         ? getJsonFormatterStaticHtml()
         : tool.slug === 'qr-code-generator'
         ? getQrCodeGeneratorStaticHtml()
+        : tool.slug === 'supreme-court-court-master-age-calculator'
+        ? getSupremeCourtCourtMasterStaticHtml()
         : `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb Navigation -->
@@ -812,6 +819,14 @@ function generateToolPages(headAssets: AssetManifest): string[] {
     fs.writeFileSync(path.join(toolDir, 'index.html'), html, 'utf8');
 
     generatedRoutes.push(`/tools/${tool.slug}/`);
+
+    // For tools supporting root-level friendly URLs
+    if (tool.slug === 'supreme-court-court-master-age-calculator') {
+      const directDir = path.join(DIST_DIR, tool.slug);
+      ensureDir(directDir);
+      fs.writeFileSync(path.join(directDir, 'index.html'), html, 'utf8');
+      generatedRoutes.push(`/${tool.slug}/`);
+    }
   }
 
   return generatedRoutes;
@@ -1436,7 +1451,8 @@ function main() {
     'universal-unit-converter',
     'age-calculator',
     'percentage-calculator',
-    'loan-emi-calculator'
+    'loan-emi-calculator',
+    'supreme-court-court-master-age-calculator'
   ];
 
   for (const slug of sampleSlugs) {

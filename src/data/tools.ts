@@ -2016,7 +2016,64 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     faqs: [
       { question: 'Why does my age differ from simple year subtraction?', answer: 'Recruitment boards calculate age down to the exact day. Simple subtraction ignores birth months and days, leading to false ineligibility assumptions.' }
     ],
-    relatedToolSlugs: ['exam-eligibility-checker', 'negative-marking-calculator', 'days-between-dates']
+    relatedToolSlugs: ['supreme-court-court-master-age-calculator', 'exam-eligibility-checker', 'negative-marking-calculator', 'days-between-dates']
+  },
+  {
+    id: 'supreme-court-court-master-age-calculator',
+    slug: 'supreme-court-court-master-age-calculator',
+    name: 'Supreme Court Court Master Age Calculator',
+    category: 'exam-eligibility-tools',
+    shortDescription: 'Calculate exact age as on 1 October 2026 for Supreme Court Court Master (Shorthand) recruitment with official category relaxations and rules.',
+    fullDescription: 'Calculate your exact age in years, months, and days for the Supreme Court of India Court Master (Shorthand) direct recruitment (Advertisement No.F.6/11/CM(S)/2026-SC (RC) dated 15 October 2026). Checks compliance with the official 30–45 age bounds as on 1st October, 2026, departmental candidate exemption (no upper age limit for SCI Registry staff), statutory OBC/SC/ST/DFF relaxations, and strictly clarifies zero age relaxation for other government or PSU employees.',
+    iconName: 'Scale',
+    keywords: [
+      'supreme court court master age calculator',
+      'court master shorthand age limit',
+      'supreme court recruitment 2026 age calculator',
+      'sci court master age cutoff 1 october 2026',
+      'supreme court shorthand age relaxation',
+      'court master eligibility calculator',
+      'sci court master age limit 30 to 45'
+    ],
+    popular: true,
+    featured: true,
+    howToSteps: [
+      { step: 1, title: 'Enter Date of Birth', instruction: 'Input your birth date as recorded in your Class X Matriculation Certificate.' },
+      { step: 2, title: 'Select Candidate Category', instruction: 'Choose General/UR, SCI Departmental Candidate, OBC (NCL), SC/ST, DFF, or Ex-Servicemen.' },
+      { step: 3, title: 'Verify Exact Age on Cutoff Date', instruction: 'Review your exact age as on 1st October, 2026, allowable age window, and official eligibility status.' },
+      { step: 4, title: 'Check Comprehensive Requirements', instruction: 'Verify graduation, 5 years regular experience, 120 wpm shorthand, and 40 wpm typing requirements.' }
+    ],
+    realLifeExample: {
+      title: 'General Category Applicant Age Verification',
+      inputDescription: 'DOB: 15-06-1994, Category: General / Unreserved, Cutoff: 01-10-2026',
+      outputDescription: 'Age: 32 Years, 3 Months, 16 Days. Eligible (Within 30–45 years prescribed baseline).',
+      details: [
+        { label: 'Date of Birth', value: '15 June 1994' },
+        { label: 'Cutoff Date', value: '01 October 2026' },
+        { label: 'Calculated Age', value: '32y 3m 16d' },
+        { label: 'Eligibility Status', value: 'Eligible (Within 30–45 Years)' }
+      ]
+    },
+    howItWorks: 'Calculates exact completed calendar years, months, and days from Date of Birth to 1st October 2026 with leap-year normalization and applies the official clauses from Supreme Court Advertisement No.F.6/11/CM(S)/2026-SC (RC).',
+    faqs: [
+      {
+        question: 'What is the official cutoff date for Supreme Court Court Master recruitment?',
+        answer: '1st October, 2026. All candidates must fulfill the age and prescribed qualification conditions as on this reference date.'
+      },
+      {
+        question: 'What is the minimum age for Court Master (Shorthand)?',
+        answer: 'Candidates must not be below 30 years of age as on 1st October, 2026 (born on or before 01-10-1996).'
+      },
+      {
+        question: 'Do PSU or other Government employees get age relaxation for Court Master?',
+        answer: 'No. The advertisement explicitly states that no age relaxation will be allowed to candidates working in other Government Departments, PSUs, Statutory bodies, or Nationalized Banks.'
+      },
+      {
+        question: 'What is the upper age limit for Supreme Court Registry staff?',
+        answer: 'There is no upper age limit for departmental candidates of the Registry of the Supreme Court of India, provided they meet the minimum 30-year age requirement.'
+      }
+    ],
+    relatedToolSlugs: ['age-limit-calculator', 'exam-eligibility-checker', 'negative-marking-calculator', 'in-hand-salary-estimator']
   },
   {
     id: 'negative-marking-calculator',
